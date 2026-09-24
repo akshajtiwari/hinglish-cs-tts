@@ -1,0 +1,21 @@
+# data and model artifacts stay local
+data/
+*.wav
+*.zip
+*.safetensors
+*.pt
+*.ckpt
+checkpoints/
+outputs/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# editors / os
+.DS_Store
+.idea/
+.vscode/
