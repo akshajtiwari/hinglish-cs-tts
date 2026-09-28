@@ -19,3 +19,9 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# server-side artifacts
+hinglishtts/
+F5-TTS/
+logs/
+.python-version
