@@ -60,6 +60,45 @@ def resample(src: Path, dst: Path, sr: int = 24000):
                     "-ac", "1", "-ar", str(sr), "-sample_fmt", "s16", str(dst)], check=True)
 
 
+def merge_consecutive(recs, target_sec, out_dir: Path, gap_ms=200, max_sec=20.0):
+    """Greedily join consecutive clips (sorted by filename) of the same speaker until >= target_sec."""
+    import struct
+    merged, buf = [], []
+
+    def flush():
+        if not buf:
+            return
+        if len(buf) == 1:
+            merged.append(buf[0]); buf.clear(); return
+        name = f"{buf[0]['speaker']}_{Path(buf[0]['audio_file']).stem}_{Path(buf[-1]['audio_file']).stem}.wav"
+        dst = out_dir / name
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        sr = None
+        with wave.open(str(dst), "wb") as wo:
+            for i, r in enumerate(buf):
+                with wave.open(r["audio_file"]) as wi:
+                    if sr is None:
+                        sr = wi.getframerate(); wo.setnchannels(1); wo.setsampwidth(2); wo.setframerate(sr)
+                    if i:
+                        wo.writeframes(b"\x00\x00" * int(sr * gap_ms / 1000))
+                    wo.writeframes(wi.readframes(wi.getnframes()))
+        merged.append({**buf[0], "audio_file": str(dst.resolve()),
+                       "text": " ".join(r["text"] for r in buf),
+                       "duration": round(sum(r["duration"] for r in buf) + gap_ms / 1000 * (len(buf) - 1), 3),
+                       "mixed": any(r["mixed"] for r in buf), "switches": sum(r["switches"] for r in buf),
+                       "merged_from": len(buf)})
+        buf.clear()
+
+    for r in sorted(recs, key=lambda r: Path(r["audio_file"]).name):
+        if buf and (r["speaker"] != buf[0]["speaker"] or sum(b["duration"] for b in buf) + r["duration"] > max_sec):
+            flush()
+        buf.append(r)
+        if sum(b["duration"] for b in buf) >= target_sec:
+            flush()
+    flush()
+    return merged
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--corpus", default="data/Corpus")
@@ -69,6 +108,8 @@ def main():
     ap.add_argument("--max-sec", type=float, default=20.0)
     ap.add_argument("--oversample-mixed", type=int, default=1, help="repeat mixed clips N times in train.csv")
     ap.add_argument("--sr", type=int, default=24000)
+    ap.add_argument("--merge-to-sec", type=float, default=0.0,
+                    help="train split only: concatenate consecutive same-speaker clips (200 ms gap) until >= this many seconds; 0 = off")
     args = ap.parse_args()
     if not shutil.which("ffmpeg"):
         raise SystemExit("ffmpeg not found")
@@ -98,8 +139,11 @@ def main():
                 rec = {"audio_file": str(dst.resolve()), "text": text, "duration": round(sec, 3),
                        "speaker": wav.name[:4], "group": grp, "mixed": mixed, "switches": nsw}
                 manifest.append(rec)
-                reps = args.oversample_mixed if (split == "train" and mixed) else 1
-                rows.extend([rec] * reps)
+        if split == "train" and args.merge_to_sec > 0:
+            manifest = merge_consecutive(manifest, args.merge_to_sec, out / "wavs" / "merged_train", max_sec=args.max_sec)
+        for rec in manifest:
+            reps = args.oversample_mixed if (split == "train" and rec["mixed"]) else 1
+            rows.extend([rec] * reps)
         with open(out / f"{split}.csv", "w", encoding="utf-8", newline="") as f:
             w = csv.writer(f, delimiter="|", quoting=csv.QUOTE_NONE, escapechar="\\")
             w.writerow(["audio_file", "text"])
