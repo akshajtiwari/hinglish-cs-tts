@@ -2,6 +2,8 @@
 
 Project started 2026-09-23.
 
+> **The current project is described from scratch in [`../switchmos/`](../switchmos/README.md).** This `docs/` folder is the history and the detailed evidence behind it.
+>
 > **Current direction (2026-09-29): SwitchMOS**, a language-independent, UTMOS-style naturalness predictor with a whole-clip score and per-switch scores, trained on SpeechArenaBench pairwise preferences. SDS becomes its interpretable switch-diagnostics layer. Spec: `sds_guide/13_switchmos.md`. Earlier working title below.
 
 Earlier working title: *Natural Switches Are Not Seamless: A Switch-Localized, Human-Calibrated Metric for Code-Switched TTS, with a Hinglish Case Study.*
