@@ -28,4 +28,7 @@
 | Competition on SpeechArenaBench | Rising | Move fast; public repo exposure (D9) |
 | A16 speed | Known | Precompute features; reduce sampling steps for editing |
 | Too few code-mixed pairs in some languages | Unknown | Phase 1 count; restrict leave-one-out to languages with enough |
+| Minimal pairs need natural code-switched audio, which exists openly only for Hindi and Bengali | Known | For the other 8 languages, build pairs from SpeechArenaBench's synthetic clips using only clearly-worse DSP edits (splice, pitch reset, wrong duration); infill edits stay natural-speech-only. The switch expert's transfer to unseen languages is then itself a result |
+| Plain fine-tuned encoder already handles code-mixed pairs well | Unknown | Phase 1.5 check before building minimal pairs |
+| Code-mixed sentences are longer/harder, confounding comparisons | Known | Length-matched comparisons; error-explanation analysis in Phase 1.5 |
 | License mixing (NC corpora) | Low | Keep NC data out of released model training, or release model as research-only |

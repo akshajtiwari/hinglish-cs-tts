@@ -15,6 +15,20 @@ The equivalent of test-set accuracy for a model. Every test uses data not seen i
 | 7 | Robustness | Loudness, sample rate, ±20 ms alignment jitter | Score stability (Kendall τ ≥ 0.9) | Usable in practice |
 | 8 | Defect stratification | Pairs with vs without axis-rated defects | Accuracy per stratum | Not just catching noise or hallucination |
 
+| 9 | **Standard-benchmark sanity check** | VoiceMOS 2022 (BVCC main + Mandarin OOD), VoiceMOS 2023 zero-shot, SOMOS; no retraining, with 1–5 calibration | System-level SRCC next to UTMOS | Global expert isn't broken; not overfit to Indic commercial TTS. **Expected, written in advance: SwitchMOS trails UTMOS here** (no switches; relative training; older systems) |
+
+## 7.1b Claims ranked by expected strength (decided in advance)
+
+| Claim | Expected likelihood | Role in paper |
+|---|---|---|
+| Beats UTMOS on code-mixed Hindi pairs | High (mostly shows in-domain training value) | Reported, not a contribution |
+| Per-switch scores localize edited switches (AUC ≥ 0.8) | Fairly high | **Lead contribution** |
+| Label efficiency (accuracy vs number of human pairs) | Fairly high | **Lead contribution** |
+| Per-switch scores match human switch ratings | Moderate | Key validation |
+| Switch expert improves whole-clip accuracy | Uncertain; DAMOS-style gains may be small | Secondary headline; null result reported |
+| Works on held-out languages | Unknown until Phase 1 counts | Generalization claim, scoped to what's tested |
+| Beats SpeechJudge on raw accuracy | Unclear, possibly not | Compete on size, locality, Indic coverage instead |
+
 ## 7.2 Baselines
 
 | Baseline | Why |

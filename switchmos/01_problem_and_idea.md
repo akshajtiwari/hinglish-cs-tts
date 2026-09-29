@@ -20,6 +20,13 @@ Real bilinguals **don't** switch smoothly. They slow down before the switch, and
 2. Works for **any code-switched language pair** in principle, and is tested on pairs it never trained on.
 3. Learns mostly from **real bilingual speech** and **automatically built minimal pairs** (the same clip with only the switch regenerated), using human ratings mainly to calibrate and test.
 
+## Scope, honestly
+
+- **v1 is Hinglish-first.** Natural reference speech, human study, and most minimal pairs are Hindi–English.
+- **Designed to generalize to Indic–English pairs**, tested by leave-one-language-out on SpeechArenaBench. "Any two languages" is not claimed.
+- **Not handled in v1:** fully romanized Hinglish ("mujhe office ke liye late ho gaya") without word-level language tags.
+- **Relationship to UTMOS:** same family (neural predictor on a self-supervised encoder), reusing its proven ideas, but a switch-aware specialist, trained on preferences and minimal pairs, with per-switch output. Not a new general-purpose UTMOS, and not aiming to win the VoiceMOS 2022 leaderboard.
+
 ## Why not just a switch-only score?
 
 A clip can be natural at the switch and robotic everywhere else. The headline number covers the whole clip; switch scores explain it and catch what whole-clip models miss.
