@@ -28,7 +28,7 @@ Each item: the question, why it matters, the options, a recommendation, and when
 ### D16. Paper framing: switch metric vs switch-aware predictor
 - **Why:** a switch-only score is niche; users want one whole-clip number. SpeechArenaBench (MIT, 16,694 Hindi pairs with audio) makes a learned whole-clip predictor feasible.
 - **Options:** (a) SDS metric paper as planned; (b) switch-aware predictor with SDS as its switch branch; (c) both, SDS first as a short paper.
-- **Recommendation:** (b), pending two checks: a full novelty search on code-switched MOS prediction, and a count of code-mixed Hindi pairs in SpeechArenaBench. See `../11_switch_aware_predictor.md`.
+- **Recommendation:** (b). Both checks done (2026-09-29): the switch branch and SpeechArenaBench training are novel (SpeechJudge already covers a Mandarin–English code-switched predictor without a switch branch), and there are 4,035 code-mixed Hindi pairs. See `../11_switch_aware_predictor.md`.
 
 ## Decide by Phase 3
 

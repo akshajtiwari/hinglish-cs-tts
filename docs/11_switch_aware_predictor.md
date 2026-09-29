@@ -35,7 +35,21 @@ So the proposal: **a whole-clip naturalness predictor for Hinglish, UTMOS-style,
 
 - 4,164 of 5,357 benchmark sentences (78%) are code-mixed, across 10 languages. Types: Latin-script English insertions, transliterated English in native script, mixed script.
 - Rankings change "only modestly" between code-mixed and normalized input (Gemini first in all). This concerns system rankings, not switch sensitivity, but is a caution for the switch-branch gain.
-- Exact Hindi code-mixed pair count: pending gate acceptance; script `model/scripts/10_count_speecharena_codemix.py`. Script-based detection is a lower bound (misses transliterated English).
+- **Exact Hindi count (2026-09-29, `model/scripts/10_count_speecharena_codemix.py`, stats in `docs/data/speecharena_hi_stats.json`):**
+
+| Item | Value |
+|---|---|
+| Hindi pairs total | 16,694 (9,290 unique sentences, 242 raters, 7 systems) |
+| **Code-mixed pairs** (≥1 Devanagari and ≥1 Latin word) | **4,035** (24%), 2,493 unique sentences, 198 raters |
+| Devanagari-only pairs | 11,281 (may include English transliterated into Devanagari, so the mixed count is a lower bound) |
+| Latin-only pairs | 1,378 |
+| Latin words per mixed sentence | mean 7.4, range 1–35 |
+| Mixed-pair appearances per system | 738 (IndicF5) to 1,309 (Gemini) |
+| Preference labels | single system, "Tie / No Preference" (677), or two systems listed together (e.g. "Gemini 2.5 Pro TTS, Eleven Labs v3", 403) — label semantics must be checked before training |
+| `fine_grained_eval` | per-clip 1–5 ratings on noise, liveliness, voice_quality, expressiveness, hallucinations, intelligibility, plus a free-text comment. Early examples look mostly 1 or 5, so the scale may be used near-binarily |
+
+- **Verdict: 4,035 code-mixed pairs is well above the 1,000 threshold.** Sentences are genuine intra-sentential Hinglish (e.g. "पापा ने कहा कि नया laptop दिला देंगे, but on one condition कि मुझे exams में अच्छे marks लाने होंगे।"), often with multi-word English islands, which is exactly the switch variety the model needs.
+- The per-axis ratings can serve as auxiliary training targets (multi-task heads), and give the defect stratification the Limits paper recommends.
 
 ## 11.3 The data that makes it possible: SpeechArenaBench
 
