@@ -49,6 +49,48 @@ For each switch point *s* in an utterance, anchored on forced-aligned word bound
 
 **Ablations that must be in the paper:** with vs without within-utterance normalization; fixed 250 ms symmetric window vs syllable-anchored asymmetric; raw discontinuity magnitude vs distance-to-human; sensitivity to ±20 ms alignment jitter.
 
+## 4.2b SDS v1.1 revisions (2026-09-29)
+
+Changes after review. These supersede 4.2 where they conflict.
+
+**Three-part score, not one.** The within-utterance contrast hides a system that has seams at *every* boundary: the switch looks no worse than its neighbours and the contrast is ~0. So SDS reports three parts:
+
+| Part | Question | Reference |
+|---|---|---|
+| **SDS-switch** (contrast, former SDS-prosody) | Is the switch marked the way humans mark it, relative to the rest of the sentence? | natural switch contrasts |
+| **SDS-boundary** (absolute) | Do ordinary word joins sound human? | natural non-switch boundaries |
+| **SDS-seam** | Does any boundary look like a splice? | natural vs spliced-natural classifier |
+
+Plus whole-utterance MOS/CMOS, CER, SIM reported alongside. Reading: good boundary + bad switch = the Hinglish-specific failure; bad boundary + ~0 switch contrast = seams everywhere.
+
+**Scale: percentile, not distance.** Mahalanobis distance puts real switches at a typical nonzero value. Report each part as the percentile of the natural distribution. Held-out natural speech should sit near the 50th percentile, not at zero.
+
+**Controls (each tests one term).**
+
+| Control | How | Expected |
+|---|---|---|
+| Held-out natural | reference-set-disjoint HiACC speakers | ~50th percentile on all parts |
+| Spliced natural | same-speaker Hindi and English segments joined at the switch, 10 ms crossfade | SDS-seam high |
+| Under-marked | natural switch with pitch and duration bump flattened (Praat PSOLA) | SDS-switch flags under-marking |
+| Over-marked | natural switch with inserted 300 ms pause or pitch reset | SDS-switch flags over-marking |
+| Resynthesis-only | natural switch passed through Praat PSOLA with no change | separates manipulation effect from tool artifacts |
+
+**Speaker splits (circularity).** The fine-tune is trained on HiACC train speakers, so the reference must never contain them.
+
+| HiACC split | Role |
+|---|---|
+| train | fine-tuning only |
+| val (disjoint speakers) | **reference distributions** |
+| test (disjoint speakers) | scoring natural controls; test sentences for TTS |
+
+Robustness check: rebuild the reference from IIT-B (Rao 2018) only and confirm system rankings hold. IIT-B is rehearsed public speech, so it is a check, not the primary.
+
+**Bandwidth.** HiACC is 16 kHz phone audio; TTS output is 24 kHz. Resample everything to 16 kHz and low-pass at 8 kHz before any feature extraction, or spectral features separate natural from synthetic on bandwidth alone.
+
+**Fine-tune comparison holds fixed:** reference voice clip, sentences, script policy, duration patch, sampling steps, CFG strength, seed. Only the weights differ.
+
+**Baseline wording.** IndicF5 + character-count patch is "the strongest documented zero-shot setup", not "the strongest open baseline" (Orato may beat it).
+
 ## 4.3 Human validation protocol
 
 Three complementary tasks, bilingual Hindi-English raters, switch-local stimuli (≈1.5 s excerpt centred on the switch, with a 0.5 s fade, plus the full utterance available on demand):
@@ -59,7 +101,9 @@ Three complementary tasks, bilingual Hindi-English raters, switch-local stimuli 
 
 Stimuli: ≥500 switch windows across {natural HiACC, spliced-natural control, IndicF5 zero-shot, IndicF5 + duration patch, Orato fine-tune, Indic Parler, our fine-tune, Bulbul v3, Gemini TTS}. Include *also* whole-utterance MOS so the paper can show the local–global dissociation.
 
-Validation statistics: (i) Spearman/Kendall of SDS vs task-1 ratings *within* utterance, controlling for utterance MOS; (ii) ROC of SDS-seam for natural vs spliced; (iii) SDS vs task-3 accuracy; (iv) same for baselines: raw join cost, PBD (MagpieTTS-LF), CMI_speech (Yeo 2026), Whisper-LID confidence (LCG), duration-abnormal rate (Zuo 2026), UTMOS, NISQA discontinuity, IndicMOS.
+Validation statistics: (i) Spearman/Kendall of SDS vs task-1 ratings *within* utterance, as partial correlation controlling for utterance MOS; (ii) ROC/AUC of SDS-seam for natural vs spliced, and of SDS-switch for natural vs under-/over-marked controls; (iii) SDS vs task-3 accuracy; (iv) the same statistics for every baseline metric: raw join cost, PBD (MagpieTTS-LF), CMI_speech (Yeo 2026), Whisper-LID confidence (LCG), duration-abnormal rate (Zuo 2026), UTMOS, NISQA discontinuity, IndicMOS, CER.
+
+**Success bar (single, pre-registered):** SDS's correlation with switch-local human ratings is significantly higher than raw join cost's, by Steiger's test for dependent correlations (both share the human ratings), p < 0.05, with bootstrap 95% CIs over raters and stimuli. Beating the other baselines is reported but is not the bar.
 
 Rater pool: 5–8 screened bilinguals is enough for correlation claims; AI4Bharat's Voice-First Nation shows large Hinglish rater pools exist if scaling is needed. Tools: webMUSHRA (https://github.com/audiolabs/webMUSHRA) or ITU P.808 toolkit (https://github.com/microsoft/P.808).
 
