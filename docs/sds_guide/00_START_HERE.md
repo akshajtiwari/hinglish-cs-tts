@@ -16,8 +16,16 @@ This folder explains the Switch Discontinuity Score (SDS) from zero, in the orde
 | 10_glossary.md | Every term used here, in plain words |
 | 11_existing_scores.md | MOS, UTMOS, and every other current "does it sound human" score, and what each misses |
 | 12_why_each_choice.md | One-line reason for every technical choice (16 kHz, 8 kHz, 25 ms, …) |
+| **13_switchmos.md** | **The adopted direction:** the language-independent, switch-aware naturalness predictor |
 
-> **Direction update (2026-09-29):** the project is moving toward a whole-clip, switch-aware naturalness predictor (see `../11_switch_aware_predictor.md`). Everything in this guide still applies: SDS becomes that model's switch branch and its explanation.
+> **Direction update (2026-09-29): the project now builds SwitchMOS** (working name), a language-independent, UTMOS-style naturalness predictor with a whole-clip score plus per-switch scores. **Read `13_switchmos.md` first.**
+>
+> How this guide fits: files 01–10 describe **SDS, the switch-diagnostics layer**. It is not dropped. It becomes SwitchMOS's switch branch and the explanation of its scores. Where a file below talks about "the score", read it as "the SDS switch-diagnostics layer".
+>
+> | Layer | Learned from | Output |
+> |---|---|---|
+> | SDS switch diagnostics (01–10) | Natural code-switched speech | Per-switch percentiles, flags, diagnosis |
+> | **SwitchMOS** (13) | Human pairwise preferences, 10 languages | Whole-clip score + per-switch scores |
 
 ## SDS in five sentences
 

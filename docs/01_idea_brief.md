@@ -31,7 +31,7 @@ The v0 assumption was "less discontinuity at the switch = more natural". The pho
 
 ## Direction update (2026-09-29)
 
-Proposed reframing: instead of a switch-only score, build a **whole-clip naturalness predictor for Hinglish (UTMOS-style) with an explicit switch branch**, trained on AI4Bharat's SpeechArenaBench pairwise preferences. SDS becomes the switch branch and the explanation of the score. The decisive experiment is whether adding the switch branch beats the same model without it on code-mixed clips. Details: `11_switch_aware_predictor.md`.
+**Adopted, and made language-independent (SwitchMOS, spec in `sds_guide/13_switchmos.md`).** Instead of a switch-only score, build a **whole-clip naturalness predictor (UTMOS-style) with an explicit switch branch**, trained across SpeechArenaBench's 10 Indic–English pairs and tested leave-one-language-out, with Hinglish as the fully human-validated case, trained on AI4Bharat's SpeechArenaBench pairwise preferences. SDS becomes the switch branch and the explanation of the score. The decisive experiment is whether adding the switch branch beats the same model without it on code-mixed clips. Details: `11_switch_aware_predictor.md`.
 
 ## Deliverables
 

@@ -43,3 +43,10 @@ The engine is language-independent; the reference pack isn't.
 2. Provide per-word language tags if both languages use the same script (e.g. Spanish–English).
 3. Run the building steps in 04 to create a new pack, e.g. `zh-en-v1`.
 4. The seam part transfers as-is; the switch part must be re-validated with listeners of that pair.
+
+## 7.5 Using SwitchMOS (update 2026-09-29)
+
+```bash
+switchmos score --audio out/*.wav --transcripts out/transcripts.tsv --lang-pair hi-en --out results.jsonl
+```
+Same fair-use rules as 7.3. Language pairs outside the 10 Indic–English training pairs are "untested" until a held-out evaluation exists for them.

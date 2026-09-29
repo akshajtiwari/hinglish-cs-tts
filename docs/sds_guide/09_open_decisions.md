@@ -18,6 +18,7 @@ Each item: the question, why it matters, the options, a recommendation, and when
 - **Why:** "Switch *Discontinuity* Score" implies smaller discontinuity is better, which is the opposite of the core finding.
 - **Options:** keep SDS; rename, e.g. "Switch Naturalness Score (SNS)" or "Code-Switch Prosody Score".
 - **Recommendation:** rename before anything is public. Decide in Phase 0.
+- **Update 2026-09-29:** the headline model is now called **SwitchMOS** (working name). "SDS" is kept only for the interpretable switch-diagnostics layer. Alternatives if you prefer: CS-MOS, SwitchNat, SNAP (Switch-aware Naturalness Predictor).
 
 ### D4. The paper's primary claim
 - **Recommendation:** "A switch-localized metric calibrated to real Hinglish switches agrees with bilingual listeners significantly better than join cost." Not "universal". Portability shown as a secondary demonstration only.
@@ -28,7 +29,23 @@ Each item: the question, why it matters, the options, a recommendation, and when
 ### D16. Paper framing: switch metric vs switch-aware predictor
 - **Why:** a switch-only score is niche; users want one whole-clip number. SpeechArenaBench (MIT, 16,694 Hindi pairs with audio) makes a learned whole-clip predictor feasible.
 - **Options:** (a) SDS metric paper as planned; (b) switch-aware predictor with SDS as its switch branch; (c) both, SDS first as a short paper.
+- **Status: ADOPTED (2026-09-29)** as SwitchMOS, language-independent (see D17). Spec: `13_switchmos.md`.
 - **Recommendation:** (b). Both checks done (2026-09-29): the switch branch and SpeechArenaBench training are novel (SpeechJudge already covers a Mandarin–English code-switched predictor without a switch branch), and there are 4,035 code-mixed Hindi pairs. See `../11_switch_aware_predictor.md`.
+
+### D17. How far to claim language independence
+- **Recommendation:** build language-independent from day one; claim only what's tested: leave-one-language-out across 10 Indic–English pairs, plus zh–en zero-shot if data exists. Hinglish is the fully human-validated case.
+
+### D18. Multilingual encoder
+- **Options:** mHuBERT-147, MMS-300M, w2v-BERT 2.0, XLS-R.
+- **Recommendation:** pick by a small pilot on pairwise accuracy, weighted by fit on one 16 GB A16.
+
+### D19. Switch detection beyond script
+- **Why:** English transliterated into native script, and same-script pairs, are invisible to script-based detection.
+- **Recommendation:** v1 uses script only (covers all SpeechArenaBench pairs for Latin-script English); measure how many switches are missed on a hand-checked sample; add a word-level language-ID model in v2.
+
+### D20. SpeechArenaBench label semantics
+- **Why:** 403+ Hindi pairs list two systems as the preference; 677 are ties.
+- **Recommendation:** read the dataset card and paper; if two-system labels mean "both good", treat as ties.
 
 ## Decide by Phase 3
 

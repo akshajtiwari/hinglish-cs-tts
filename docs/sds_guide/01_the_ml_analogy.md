@@ -52,3 +52,18 @@ The fine-tuned IndicF5 is **not** part of SDS. It's one of the systems SDS will 
 | Human rating set | Raters listening to TTS clips from **test** sentences | Test labels for the metric |
 
 No speaker appears in more than one of these rows. That is what prevents the fine-tune from scoring well just by imitating the reference.
+
+## 1.5 SwitchMOS is an ordinary supervised model (update 2026-09-29)
+
+SDS above is a one-class model with no human labels. SwitchMOS (13) is a normal supervised model:
+
+| Normal supervised model | SwitchMOS |
+|---|---|
+| Training data | SpeechArenaBench pairwise preferences, 10 Indic languages; SDS controls for switch-branch pretraining |
+| Labels | Human "A sounds better than B"; 6 axis ratings per clip |
+| Model | Multilingual SSL encoder + whole-clip branch + switch branch (SDS features inside) |
+| Loss | Bradley–Terry pairwise loss + auxiliary axis and control-class losses |
+| Validation | Held-out raters and sentences |
+| Test | Held-out **systems** and held-out **languages**; our Hinglish switch-focused human study |
+| Test metrics | Pairwise accuracy, Kendall τ of system rankings, correlation of per-switch scores with switch ratings |
+| Key experiment | Same model without the switch branch |

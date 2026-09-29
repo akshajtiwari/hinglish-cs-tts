@@ -78,3 +78,12 @@ From REF speakers only:
 - Write down the test plan and pass bars (05) **before** looking at any test result.
 
 **After B8, nothing in the core changes.** If testing reveals a problem, that becomes `hinglish-v2` and is re-tested from scratch.
+
+## 4.3 Building SwitchMOS (update 2026-09-29)
+
+After the SDS layer is frozen (B8):
+- **S1.** Count code-mixed pairs in all 10 SpeechArenaBench languages; resolve the two-system and tie labels.
+- **S2.** Pick the multilingual encoder on a small pilot (mHuBERT-147, MMS-300M, w2v-BERT 2.0).
+- **S3.** Build SDS controls in each language where natural code-switched speech exists (Hinglish first); pretrain the switch branch.
+- **S4.** Train on SpeechArenaBench with Bradley–Terry loss, splits held out by system and by language.
+- **S5.** Freeze and version the model before running the test battery in 05 §5.5.

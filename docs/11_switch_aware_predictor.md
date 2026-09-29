@@ -1,4 +1,6 @@
-# 11 — Switch-aware naturalness predictor (proposed direction, 2026-09-29)
+# 11 — Switch-aware naturalness predictor: evidence (2026-09-29)
+
+> **Adopted as SwitchMOS, language-independent.** The current specification is `sds_guide/13_switchmos.md`. This file keeps the original Hindi-only sketch plus the evidence: novelty search and dataset counts. Where they differ, 13 wins (multilingual encoder instead of WavLM; 10 languages instead of Hindi only; leave-one-language-out test).
 
 ## 11.1 Why this idea
 

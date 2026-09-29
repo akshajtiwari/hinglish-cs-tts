@@ -77,3 +77,7 @@ def score_clip(audio, transcript, pack):
 ## 3.5 Cost
 
 CPU only. Alignment dominates: roughly a few clips per second on a laptop. A 300-clip system evaluation takes minutes.
+
+## 3.6 SwitchMOS inference (update 2026-09-29)
+
+SwitchMOS runs stages 1–7 above unchanged (normalize, text, romanize, align, boundaries, features, contrast), then passes the audio through a multilingual SSL encoder and the trained heads. Stage 8's frozen reference pack is still used, for the SDS diagnostics attached to each switch. Switch detection gains a word-level language-ID fallback for shared-script pairs. GPU optional; a CPU run is slower but works. Architecture: `13_switchmos.md` §13.5.

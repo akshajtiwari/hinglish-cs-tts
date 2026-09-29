@@ -79,3 +79,7 @@
 - Anything about a clip with no switches, except the boundary and seam parts.
 
 SDS is reported **next to** those, never instead of them.
+
+## 2.6 SwitchMOS output (update 2026-09-29)
+
+SwitchMOS adds one whole-clip score and a learned score per switch, with the SDS diagnostics attached to each switch. Format in `13_switchmos.md` §13.9. The headline number becomes the whole-clip `switchmos` score; SDS's `in_range_rate` stays as a diagnostic.

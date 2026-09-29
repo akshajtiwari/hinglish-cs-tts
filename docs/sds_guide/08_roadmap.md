@@ -12,6 +12,10 @@ Each phase has a goal, the work, what it produces, and a **gate**: a condition t
 - **Do:** full novelty search on code-switched MOS prediction; accept the SpeechArenaBench gate; count code-mixed Hindi pairs; inspect `fine_grained_eval`.
 - **Gate:** enough code-mixed pairs (roughly ≥1,000) and no prior work that already does it → adopt the predictor framing (D16). Otherwise continue with the SDS-metric plan below, unchanged.
 
+## Phase 0.6 — SwitchMOS data check (update 2026-09-29)
+- **Do:** run `model/scripts/10_count_speecharena_codemix.py` for all 10 languages; decode the two-system and tie labels; check SpeechJudge data availability.
+- **Gate:** enough code-mixed pairs per language for leave-one-language-out (target ≥500 per held-out language).
+
 ## Phase 1 — Data foundation
 - **Goal:** clean, correctly split data.
 - **Do:** apply the speaker re-split (04 §4.1); regenerate prepared data with it; email HiACC authors about the license; download IIT-B dataset.
@@ -82,3 +86,16 @@ Can start as soon as Phase 1 is done; only checkpoint selection waits for Phase 
 ## The single most important gate
 
 Phase 3. Everything else assumes real bilingual switches have a measurable signature. That's cheap to check and should be checked first.
+
+## SwitchMOS phases (update 2026-09-29)
+
+These follow Phase 4 (SDS layer frozen) and run alongside Phases 5–7:
+
+| Phase | Work | Weeks |
+|---|---|---|
+| M1 | Encoder pilot; data loaders for SpeechArenaBench (text columns + streamed audio) | 1–2 |
+| M2 | Switch-branch pretraining on controls | 1 |
+| M3 | Preference training; held-out-system and held-out-language splits | 2–3 |
+| M4 | Test battery (13 §13.8), including the Hinglish switch study from Phase 7 | 1–2 |
+
+Revised total: ~15–18 weeks part-time. The SDS Phase 3 gate still comes first: if natural switches carry no measurable signature, the switch branch has little to learn from its hand-crafted features (though the learned embeddings could still help).

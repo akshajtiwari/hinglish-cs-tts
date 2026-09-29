@@ -64,6 +64,8 @@ Qwen3-TTS (2026) reports only WER/CER and SIM for generated speech; UTMOS/PESQ/S
 | **LCG localized metrics** (EMNLP 2026) | Accent nativeness of the embedded phrase | Accent only, no prosodic continuity |
 | **Duration-abnormal rate** (Zuo 2026) | Utterances with abnormal duration | Utterance-level |
 | **Frame-level MOS** (Kuhlmann 2025) | Where in the clip quality drops | Generic distortions, not switches |
+| **SpeechJudge** (ICLR 2026) | Whole-clip naturalness judge trained on 99K pairwise preferences, incl. Mandarin–English code-switched clips | No switch branch; not Indic; L2-English raters for mixed clips |
+| **DAMOS** (2026) | Localizes distortions, then feeds them into MOS prediction | Generic distortions, not language switches |
 
 ## 11.6 The gap in one line
 

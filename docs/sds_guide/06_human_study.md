@@ -41,3 +41,7 @@ webMUSHRA (browser) or a simple Gradio form; results stored as CSV: rater, clip,
 ## 6.7 Released artifact
 
 The rated excerpts + anonymized ratings, so anyone can test their own metric against the same gold labels.
+
+## 6.8 Role under SwitchMOS (update 2026-09-29)
+
+SpeechArenaBench supplies the training labels, so this study is no longer the only human data. It becomes the **test of the per-switch scores**, which no public dataset labels. It also adds systems absent from SpeechArenaBench (Orato, our fine-tune, Indic Parler) as out-of-distribution test systems.

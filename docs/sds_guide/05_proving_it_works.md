@@ -44,3 +44,14 @@ All three are true:
 1. The reference pack is frozen and versioned.
 2. T1, T2, and T3 pass on data never seen during building.
 3. The code, reference pack, rated clips, and test results are public, so anyone can reproduce the numbers.
+
+## 5.5 Proving SwitchMOS works (update 2026-09-29)
+
+Full battery in `13_switchmos.md` §13.8. The pass conditions:
+1. **Switch-branch ablation:** beats the same model without the switch branch on code-mixed pairs, no loss on monolingual pairs.
+2. **Held-out systems:** pairwise accuracy and system-ranking agreement hold on TTS systems not seen in training.
+3. **Held-out languages:** leave-one-language-out across the 10 Indic languages.
+4. **Switch-score validity:** per-switch scores correlate with the Hinglish switch-focused human ratings (study in 06).
+5. **Baselines:** reported against UTMOS, SpeechJudge-GRM zero-shot, duration-only, and SDS alone.
+
+The SDS tests T1–T4 above still apply to the diagnostics layer.
