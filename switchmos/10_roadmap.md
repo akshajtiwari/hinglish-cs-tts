@@ -17,6 +17,8 @@
 
 **Total:** ~14–18 weeks part-time. Phases 3–6 can overlap.
 
+**After this roadmap (stage 1: Hinglish):** stage 2 (Indic–English, leave-one-language-out) and stage 3 (universal switch features; other local events such as names, numbers, long-form chunk joins). See `01_problem_and_idea.md` for the staged vision and what must hold before each step.
+
 **Optional, parallel:** fine-tune IndicF5 on HiACC FT speakers (scripts in `../model/`), as an extra test system and a case study of "does real conversational data fix switches".
 
 **Most important early gates:** Phase 1.5 (is there room for a switch expert?), Phase 2 (can we build minimal pairs?), and Phase 3 (do real switches carry a signature?). All three are cheap and decide the design. Phase 1.5 can run alongside Phase 1.

@@ -27,6 +27,23 @@ Real bilinguals **don't** switch smoothly. They slow down before the switch, and
 - **Not handled in v1:** fully romanized Hinglish ("mujhe office ke liye late ho gaya") without word-level language tags.
 - **Relationship to UTMOS:** same family (neural predictor on a self-supervised encoder), reusing its proven ideas, but a switch-aware specialist, trained on preferences and minimal pairs, with per-switch output. Not a new general-purpose UTMOS, and not aiming to win the VoiceMOS 2022 leaderboard.
 
+## Long-term vision: three stages
+
+| Stage | Scope | Data | Outcome |
+|---|---|---|---|
+| **1. Hinglish** (current) | Hindi–English | HiACC, MUCS, SpeechArenaBench Hindi, our human study | Validated SwitchMOS for Hinglish (paper 1) |
+| **2. Indic–English** | SpeechArenaBench's 10 languages | SpeechArenaBench, MUCS Bengali–English | Leave-one-language-out; the Indic standard |
+| **3. Universal** | Any code-switched pair, then other local events | Spanish–English (Bangor Miami), Mandarin–English (ASCEND, SpeechJudge), more to collect | A **local naturalness score used beside UTMOS**: UTMOS says how natural overall, SwitchMOS says where it isn't |
+
+**Hypothesized universal core** (to be tested, not assumed):
+- **Seams:** a glued join sounds wrong in any language. Most likely universal.
+- **Switch marking:** slowing before and lengthening at the switch appear in Spanish–, French–, Greek–English and Hinglish studies; strength varies by speaker and direction. Probably universal with per-pair calibration.
+- **Pitch patterns:** differ for tone languages (e.g. Mandarin). Pair-specific.
+
+**Beyond switches:** the same pipeline (align → locate events → score → train on minimal pairs) applies to other local trouble spots: names, numbers, emphasized words, joins between generated chunks in long-form TTS. That generalization is what could make a local score a routine companion to UTMOS.
+
+**Order matters:** stage 2 only after stage 1's per-switch scores match human judgments; stage 3 only after leave-one-language-out works in stage 2.
+
 ## Why not just a switch-only score?
 
 A clip can be natural at the switch and robotic everywhere else. The headline number covers the whole clip; switch scores explain it and catch what whole-clip models miss.
