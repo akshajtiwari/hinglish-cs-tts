@@ -64,6 +64,25 @@ So the right formulation is **SDS = distance between the synthetic switch's feat
 - **Perceptual cost is real:** code-switched TTS sentences are less intelligible than monolingual ones regardless of engine (Méndez Kline & Zellou 2025).
 - **Publication gap:** CALCS 2025 (NAACL) had six papers, none on TTS. Interspeech 2024–2026 accepted CS-TTS and boundary-metric papers (see 07_importance_and_venues.md).
 
+## 2.5b Why this has not been done since MOS arrived in the 1990s
+
+"No one thought of it" is too strong: every *piece* exists, some for 30 years. What never happened is the combination, and each piece arrived in a different community or decade.
+
+1. **MOS was built for telephones, not synthesis.** ITU-T P.800 (1996) rated whole calls for channel quality. TTS inherited a sentence-level, single-number habit that never looked inside the utterance.
+2. **The seam metric existed, then was thrown away.** Unit-selection TTS (Hunt & Black 1996) had join costs that measured exactly this kind of boundary discontinuity. When neural end-to-end TTS arrived (~2017) there were no explicit joins, so seams were assumed solved and join cost was dropped.
+3. **Code-switched TTS spent a decade just getting it to work.** 2016–2022 papers fought data scarcity (synthesizing CS from monolingual corpora) and pronunciation. Evaluation stayed at "is it intelligible, is it natural overall".
+4. **The key finding lives in another field.** That natural switches are prosodically *marked* (pre-switch slowing, pitch and duration bump) comes from bilingualism and phonetics journals (Olson, Fricke, Torres Cacoullos). TTS researchers rarely read them, so the obvious target was "smooth", and "smooth" looked already achieved.
+5. **Benchmarks reward other numbers.** Leaderboards (Seed-TTS-eval, the Qwen3-TTS and CosyVoice reports) track WER and speaker similarity. Qwen3-TTS (2026) even names "prosodic discontinuity" and "boundary artifacts" as problems and measures them with WER only.
+6. **The dominant CS pair shaped the field.** Most CS-TTS work is Mandarin–English, evaluated by CER. Hinglish, with 250 M daily speakers, has had little TTS research and almost no evaluation research.
+7. **The enabling pieces are recent.**
+   - Spontaneous, switch-labelled Hinglish speech: HiACC, 2025.
+   - Alignment of mixed Devanagari–Latin text without a lexicon: MMS forced alignment, 2023, with uroman.
+   - Code-mixed Hindi–English forced alignment accuracy: Pandey et al., 2026.
+   - TTS good enough that the *remaining* failure is local: 2024–2026 zero-shot models.
+8. **The field is converging on it now.** Three 2026 papers circle the idea from different sides (LCG local evaluation, MagpieTTS-LF boundary discontinuity, Yeo CMI_speech). This is a timing argument for moving fast, not a reason for comfort.
+
+So the honest framing for the paper: the ingredients are old or scattered, the combination is new, and it is only feasible now.
+
 ## 2.6 Bottom line
 
 Do it, but as: **"Natural switches are not seamless: a switch-localized, human-calibrated metric for code-switched TTS, with a Hinglish case study."** The fine-tune becomes evidence that the metric detects something global MOS cannot, and the released switch-window rating set becomes the reusable artifact.
