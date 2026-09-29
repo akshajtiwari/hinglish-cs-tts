@@ -108,6 +108,9 @@ def main():
     ap.add_argument("--max-sec", type=float, default=20.0)
     ap.add_argument("--oversample-mixed", type=int, default=1, help="repeat mixed clips N times in train.csv")
     ap.add_argument("--sr", type=int, default=24000)
+    ap.add_argument("--split-file", default=None,
+                    help="JSON with speaker lists FT/REF/TEST; replaces HiACC's shipped splits (which are NOT speaker-disjoint). "
+                         "Outputs FT/REF/TEST csv+jsonl; merging and oversampling apply to FT only.")
     ap.add_argument("--merge-to-sec", type=float, default=0.0,
                     help="train split only: concatenate consecutive same-speaker clips (200 ms gap) until >= this many seconds; 0 = off")
     args = ap.parse_args()
@@ -120,9 +123,10 @@ def main():
     if args.children:
         groups.append(("children", "CH", corpus / "children" / "transcript", "{}_output.txt"))
 
-    totals = {}
+    # 1. collect every usable clip from all shipped splits
+    pool = {}
     for split in ("train", "val", "test"):
-        rows, manifest = [], []
+        recs = []
         for grp, prefix, tdir, pattern in groups:
             tx = read_transcripts(tdir / pattern.format(split), prefix)
             adir = corpus / grp / "audio" / f"{split}_split"
@@ -138,11 +142,30 @@ def main():
                 resample(wav, dst, args.sr)
                 rec = {"audio_file": str(dst.resolve()), "text": text, "duration": round(sec, 3),
                        "speaker": wav.name[:4], "group": grp, "mixed": mixed, "switches": nsw}
-                manifest.append(rec)
-        if split == "train" and args.merge_to_sec > 0:
-            manifest = merge_consecutive(manifest, args.merge_to_sec, out / "wavs" / "merged_train", max_sec=args.max_sec)
+                recs.append(rec)
+        pool[split] = recs
+
+    # 2. assign to output sets: speaker roles (preferred) or shipped splits (legacy)
+    if args.split_file:
+        roles = json.load(open(args.split_file))
+        spk2role = {s: r for r in ("FT", "REF", "TEST") for s in roles[r]}
+        allrecs = [r for v in pool.values() for r in v]
+        unknown = sorted({r["speaker"] for r in allrecs if r["speaker"] not in spk2role})
+        if unknown and not args.children:
+            raise SystemExit(f"speakers missing from split file: {unknown}")
+        sets = {k: [r for r in allrecs if spk2role.get(r["speaker"]) == k] for k in ("FT", "REF", "TEST")}
+        train_key = "FT"
+    else:
+        sets = pool
+        train_key = "train"
+
+    totals = {}
+    for split, manifest in sets.items():
+        rows = []
+        if split == train_key and args.merge_to_sec > 0:
+            manifest = merge_consecutive(manifest, args.merge_to_sec, out / "wavs" / f"merged_{split}", max_sec=args.max_sec)
         for rec in manifest:
-            reps = args.oversample_mixed if (split == "train" and rec["mixed"]) else 1
+            reps = args.oversample_mixed if (split == train_key and rec["mixed"]) else 1
             rows.extend([rec] * reps)
         with open(out / f"{split}.csv", "w", encoding="utf-8", newline="") as f:
             w = csv.writer(f, delimiter="|", quoting=csv.QUOTE_NONE, escapechar="\\")

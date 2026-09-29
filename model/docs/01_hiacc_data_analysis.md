@@ -20,7 +20,9 @@ Corpus/
     transcript/{train,val,test}_output.txt
 ```
 
-Speaker ID = first 4 chars of the filename (AD09, CH03). Splits are speaker-disjoint.
+Speaker ID = first 4 chars of the filename (AD09, CH03).
+
+**Correction (2026-09-29): the shipped splits are NOT speaker-disjoint.** All 24 adult speakers appear in train, val, and test (the readme and paper say otherwise). We use our own speaker-disjoint roles instead: `model/configs/hiacc_speaker_split.json` (FT 12 speakers / REF 6 / TEST 6). See `docs/sds_guide/04_building_the_core.md` §4.1.
 
 ## Audio
 
@@ -68,7 +70,7 @@ All 16 kHz, mono, 16-bit PCM. Clips are **short** (median ~3 s, ~10 words). 169 
 1. **Train set v1 = adult train split, all 2,322 clips** (mixed + monolingual). Keeping monolingual clips teaches the voices and Indian-English pronunciation; dropping them leaves ~1 h, too little.
 2. **Weight or oversample mixed clips** (e.g. 2× the 1,214 mixed) so switches are not a minority of frames. Ablation: mixed-only vs all.
 3. **Drop clips < 0.8 s** (near-silent fragments) and cap at 20 s (none exceed).
-4. **Val = adult val split; test = adult test split** (speaker-disjoint as shipped). Never train on test.
+4. ~~Val = adult val split; test = adult test split~~ **Superseded:** use speaker roles from `hiacc_speaker_split.json`. Fine-tune on FT speakers only; REF speakers build SDS; TEST speakers for evaluation. Run prep with `--split-file model/configs/hiacc_speaker_split.json`.
 5. **Resample 16→24 kHz** for IndicF5 (band-limited above 8 kHz; accepted).
 6. **Clean-data mixing:** add Hindi studio speech (Rasa Hindi or IndicVoices-R Hindi, gated CC BY) at roughly 1:1 hours to protect base quality. Decide after first run.
 7. **Script policy A** (English in Latin, as transcribed) for v1 *if* IndicF5's vocab has Latin letters; otherwise transliterate English to Devanagari with IndicXlit. Check vocab first (see 02 recipe doc).

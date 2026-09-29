@@ -10,7 +10,7 @@ Self-contained. Clone the repo onto the GPU server and run the scripts in order.
 | 2 | `scripts/02_convert_indicf5_ckpt.py` | server | gated IndicF5 `model.safetensors` → Trainer-loadable `pretrained_indicf5_base.safetensors` |
 | 3 | `scripts/03_train.sh` | server, in tmux | arrow dataset + `accelerate launch` fine-tune on 4×A16 |
 
-Configs: `configs/accelerate_4xa16.yaml` (4-process DDP, fp16), `configs/indicf5_vocab.txt` (2545 lines, index 0 = space).
+Configs: `configs/hiacc_speaker_split.json` (speaker-disjoint FT/REF/TEST roles; HiACC's shipped splits share all speakers), `configs/accelerate_4xa16.yaml` (4-process DDP, fp16), `configs/indicf5_vocab.txt` (2545 lines, index 0 = space).
 
 Env overrides for `03_train.sh`: `LR=1e-5 FRAMES=12800 EPOCHS=100 EXTRA="--bnb_optimizer"`.
 

@@ -5,7 +5,7 @@
 set -euo pipefail
 ROOT="$HOME/projects/hinglish-cs-tts"
 RUN="${1:-hinglish_v1}"
-CSV="$ROOT/data/hiacc24k/train.csv"                       # from 01_prepare_hiacc.py
+CSV="$ROOT/data/hiacc24k/FT.csv"                          # from 01_prepare_hiacc.py --split-file model/configs/hiacc_speaker_split.json
 VOCAB="$ROOT/model/configs/indicf5_vocab.txt"             # IndicF5 checkpoints/vocab.txt (2545 lines)
 PRETRAIN="$ROOT/checkpoints/pretrained_indicf5_base.safetensors"   # from 02_convert_indicf5_ckpt.py
 ACC="$ROOT/model/configs/accelerate_4xa16.yaml"
