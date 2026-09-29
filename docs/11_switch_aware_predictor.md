@@ -12,6 +12,31 @@ So the proposal: **a whole-clip naturalness predictor for Hinglish, UTMOS-style,
 - **None found that is trained or evaluated on code-switched speech, or that treats switch points specially.**
 - Confidence: moderate. A full literature search is required before committing (see 11.9).
 
+## 11.2b Full novelty search results (2026-09-29)
+
+| Claim | Verdict | Evidence |
+|---|---|---|
+| First naturalness predictor trained/evaluated on code-switched speech | **Done (Mandarin–English)** | **SpeechJudge** (ICLR 2026, https://arxiv.org/abs/2511.07931): 99K pairwise naturalness annotations incl. zh2mixed / en2mixed; Bradley–Terry reward model (72.7%) and generative judge (77.2%); per-setting accuracy (84.8% zh2mixed). Its raters for mixed clips were L2-English Chinese speakers; agreement was lowest on mixed clips |
+| First predictor with an explicit switch-point branch | **Novel as far as searched** | No work pools features around language-switch points. Ingredients exist: aligned prosodic features in MOS prediction (Vioni, ICASSP 2023, https://arxiv.org/abs/2211.00342); localize-then-fuse with synthetic local corruptions (DAMOS 2026, https://arxiv.org/abs/2608.21176); frame-level MOS (Kuhlmann 2025); alignment-based artifact localization (XSQ-AST 2026) |
+| First predictor trained on SpeechArenaBench / Indic pairwise preferences | **Novel** | The source paper's only predictor is XGBoost on human axis ratings (no audio). No HF models tagged with the dataset; one citing paper, which doesn't use it. Dataset public since 2026-04-30 and tagged `bradley-terry`, `code-mixing`: expect competition |
+
+**Strongest threats and positioning**
+1. **SpeechJudge.** Do not claim "first code-switched predictor". Claim: whole-clip predictors, including SpeechJudge-style Bradley–Terry models, miss switch-local problems; an explicit switch branch fixes that. Add **SpeechJudge-GRM zero-shot** (https://huggingface.co/RMSnow/SpeechJudge-GRM) and a SpeechJudge-style BTRM trained on the same Hindi data as baselines.
+2. **Limits of reference-free metrics** (https://arxiv.org/abs/2609.13150): on defect-free commercial systems, predictors are near chance and clip duration is a confound. Report duration-only and length-matched baselines; stratify pairs by whether they contain defects (SpeechArenaBench's noise and hallucination ratings); expect the switch-branch gain to concentrate on code-mixed pairs that differ on intelligibility or expressiveness.
+3. **DAMOS.** Makes "localize then fuse" not new. The contribution is *switch anchoring* plus switch-specific controls (splice, flatten, exaggerate), and native bilingual raters for an Indic pair.
+
+**Motivation to cite:** Takagi et al. 2026 (https://arxiv.org/abs/2606.19951): MOS predictors are insensitive to prosodic errors humans penalize. LCG 2026: UTMOS drops on code-switched output that humans prefer. IndicMOS 2024: zero-shot predictors degrade on Indian languages.
+
+**Other checked, not threats:** MOS-RMBench (no CS/Indic), PrefSQA (language coverage not visible), EmergentTTS-Eval (zero-shot LLM judge, foreign-phrase category), Yeo CMI_speech (language-ID index, not naturalness), VoiceMOS 2026 (no CS or Hindi track), IndicMOS (no code-mixing).
+
+**Exposure note:** the public repo (github.com/akshajtiwari/hinglish-cs-tts) is indexed by search engines, including the working title and plan.
+
+## 11.2c SpeechArenaBench code-mixed content (from the paper, Table 1)
+
+- 4,164 of 5,357 benchmark sentences (78%) are code-mixed, across 10 languages. Types: Latin-script English insertions, transliterated English in native script, mixed script.
+- Rankings change "only modestly" between code-mixed and normalized input (Gemini first in all). This concerns system rankings, not switch sensitivity, but is a caution for the switch-branch gain.
+- Exact Hindi code-mixed pair count: pending gate acceptance; script `model/scripts/10_count_speecharena_codemix.py`. Script-based detection is a lower bound (misses transliterated English).
+
 ## 11.3 The data that makes it possible: SpeechArenaBench
 
 Released by AI4Bharat with *Preferences of a Voice-First Nation* (Interspeech 2026). Checked on 2026-09-29 via the HF API:
@@ -54,6 +79,8 @@ audio + transcript
 | Model | Description |
 |---|---|
 | **A. UTMOS off-the-shelf** | Reference point |
+| **A2. SpeechJudge-GRM zero-shot** | Strongest existing code-switch-aware judge |
+| **A3. Duration-only** | Confound check (Limits paper) |
 | **B. Same encoder, fine-tuned on the same Hindi pairs, no switch branch** | **The real baseline** |
 | **C. B + switch branch** | The proposal |
 | D. SDS alone | The interpretable metric |
