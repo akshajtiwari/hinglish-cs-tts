@@ -21,6 +21,7 @@ Earlier working title: *Natural Switches Are Not Seamless: A Switch-Localized, H
 | [10_sds_feature_computation.md](10_sds_feature_computation.md) | How every SDS feature is computed, step by step |
 | [11_switch_aware_predictor.md](11_switch_aware_predictor.md) | Evidence for SwitchMOS: novelty search (SpeechJudge threat), SpeechArenaBench counts (4,035 code-mixed Hindi pairs) |
 | [sds_guide/13_switchmos.md](sds_guide/13_switchmos.md) | **Adopted direction: SwitchMOS**, a language-independent, switch-aware naturalness predictor |
+| [sds_guide/14_architecture_options.md](sds_guide/14_architecture_options.md) | What made UTMOS work (by ablation), three architecture options, and the recommended combination |
 | [sds_guide/](sds_guide/00_START_HERE.md) | **Start here if lost.** SDS explained from zero: ML analogy, inputs/outputs, core engine, building, testing, usage, ordered roadmap, open decisions, existing scores, why each choice |
 
 ## Verdict in three lines

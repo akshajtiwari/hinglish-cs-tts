@@ -27,7 +27,7 @@ A clip can be natural at the switch and robotic everywhere else. A switch-only s
 - SpeechJudge (ICLR 2026) has Mandarin–English code-switched preferences (data availability to be verified).
 - Nothing in the architecture is Hindi-specific once the encoder, alignment, and switch detection are multilingual.
 
-## 13.5 Architecture
+## 13.5 Architecture (v0 sketch — superseded by `14_architecture_options.md`)
 
 ```
 audio + transcript (+ language-pair id)

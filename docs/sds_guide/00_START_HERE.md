@@ -17,6 +17,7 @@ This folder explains the Switch Discontinuity Score (SDS) from zero, in the orde
 | 11_existing_scores.md | MOS, UTMOS, and every other current "does it sound human" score, and what each misses |
 | 12_why_each_choice.md | One-line reason for every technical choice (16 kHz, 8 kHz, 25 ms, …) |
 | **13_switchmos.md** | **The adopted direction:** the language-independent, switch-aware naturalness predictor |
+| **14_architecture_options.md** | Survey-backed architecture options (label-free SwitchLM, gated SwitchMoE, minimal-pair SwitchEdit) and the recommendation |
 
 > **Direction update (2026-09-29): the project now builds SwitchMOS** (working name), a language-independent, UTMOS-style naturalness predictor with a whole-clip score plus per-switch scores. **Read `13_switchmos.md` first.**
 >

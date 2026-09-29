@@ -47,6 +47,13 @@ Each item: the question, why it matters, the options, a recommendation, and when
 - **Why:** 403+ Hindi pairs list two systems as the preference; 677 are ties.
 - **Recommendation:** read the dataset card and paper; if two-system labels mean "both good", treat as ties.
 
+### D21. Architecture
+- **Options:** A label-free SwitchLM; B gated SwitchMoE; C minimal-pair SwitchEdit (see 14).
+- **Recommendation:** B as the model, C as its local supervision, A as a feature.
+
+### D22. Feasibility checks before committing to C
+- IndicF5 infilling (F5 `speech_edit.py`) works on Hinglish with Latin tokens; per-edit generation time on one A16; a 20-pair listening check that edited-at-switch sounds worse.
+
 ## Decide by Phase 3
 
 ### D6. How is "phrase boundary" detected?
