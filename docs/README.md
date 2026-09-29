@@ -15,6 +15,7 @@ Project started 2026-09-23. Working title: *Natural Switches Are Not Seamless: A
 | [08_research_plan_and_risks.md](08_research_plan_and_risks.md) | Phases, must-run experiments, risks, next actions |
 | [09_study_guide.md](09_study_guide.md) | What to learn, at what depth, with resources and checkpoints |
 | [10_sds_feature_computation.md](10_sds_feature_computation.md) | How every SDS feature is computed, step by step |
+| [11_switch_aware_predictor.md](11_switch_aware_predictor.md) | **Proposed direction:** a whole-clip, UTMOS-style naturalness predictor for Hinglish with a switch branch, trained on SpeechArenaBench |
 | [sds_guide/](sds_guide/00_START_HERE.md) | **Start here if lost.** SDS explained from zero: ML analogy, inputs/outputs, core engine, building, testing, usage, ordered roadmap, open decisions, existing scores, why each choice |
 
 ## Verdict in three lines

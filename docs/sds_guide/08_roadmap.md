@@ -8,6 +8,10 @@ Each phase has a goal, the work, what it produces, and a **gate**: a condition t
 - **Produces:** updated 09 with answers.
 - **Gate:** items marked "decide in Phase 0" in 09 are answered.
 
+## Phase 0.5 — Check the switch-aware predictor direction
+- **Do:** full novelty search on code-switched MOS prediction; accept the SpeechArenaBench gate; count code-mixed Hindi pairs; inspect `fine_grained_eval`.
+- **Gate:** enough code-mixed pairs (roughly ≥1,000) and no prior work that already does it → adopt the predictor framing (D16). Otherwise continue with the SDS-metric plan below, unchanged.
+
 ## Phase 1 — Data foundation
 - **Goal:** clean, correctly split data.
 - **Do:** apply the speaker re-split (04 §4.1); regenerate prepared data with it; email HiACC authors about the license; download IIT-B dataset.

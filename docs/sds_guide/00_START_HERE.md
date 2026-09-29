@@ -17,6 +17,8 @@ This folder explains the Switch Discontinuity Score (SDS) from zero, in the orde
 | 11_existing_scores.md | MOS, UTMOS, and every other current "does it sound human" score, and what each misses |
 | 12_why_each_choice.md | One-line reason for every technical choice (16 kHz, 8 kHz, 25 ms, …) |
 
+> **Direction update (2026-09-29):** the project is moving toward a whole-clip, switch-aware naturalness predictor (see `../11_switch_aware_predictor.md`). Everything in this guide still applies: SDS becomes that model's switch branch and its explanation.
+
 ## SDS in five sentences
 
 1. SDS is a measuring tool. You give it a Hinglish audio clip and its transcript. It tells you whether the moments where the speaker switches between Hindi and English sound like a real bilingual person.

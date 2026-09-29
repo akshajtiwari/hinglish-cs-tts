@@ -29,6 +29,10 @@ The v0 assumption was "less discontinuity at the switch = more natural". The pho
 
 ~250 M Indians code-switch daily. Sarvam, Gnani, and Gradium all market smooth mid-sentence switching and none has a metric for it. CS-ASR augmentation papers synthesize Hinglish and cannot check whether the switches are realistic. CALCS 2025 had no TTS papers at all.
 
+## Direction update (2026-09-29)
+
+Proposed reframing: instead of a switch-only score, build a **whole-clip naturalness predictor for Hinglish (UTMOS-style) with an explicit switch branch**, trained on AI4Bharat's SpeechArenaBench pairwise preferences. SDS becomes the switch branch and the explanation of the score. The decisive experiment is whether adding the switch branch beats the same model without it on code-mixed clips. Details: `11_switch_aware_predictor.md`.
+
 ## Deliverables
 
 - Paper (Interspeech-shape, 4 pages + refs).
