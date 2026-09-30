@@ -34,12 +34,13 @@
 
 ## What is new (verified by search, 2026-09-29)
 
-1. **Per-switch scores** inside a naturalness predictor. Not found anywhere.
-2. **Training on edited minimal pairs** (same clip, only the switch regenerated). No quality predictor has done this.
-3. **First predictor trained on SpeechArenaBench / Indic preferences.** The dataset is unused so far (public since April 2026; expect competition).
-4. **Tie-aware preference training.** Every prior work drops ties.
-5. **Leave-one-language-out generalization** across Indic–English pairs.
-6. **Small model** (30–300M vs 7B).
+1. **A whole-clip naturalness predictor trained on a broad multilingual mix** (English, Mandarin, 10 Indic languages, code-switched; absolute MOS and pairwise). No published predictor combines these. This is the headline, aimed at where UTMOS/UTMOSv2 fail (see `14_sota_and_datasets.md`).
+2. **First predictor trained on SpeechArenaBench / Indic preferences.** The dataset is unused so far (public since April 2026; expect competition).
+3. **A local-event branch with per-switch scores** inside a naturalness predictor. Not found anywhere.
+4. **Training the local branch on edited minimal pairs** (same clip, only the switch regenerated). No quality predictor has done this.
+5. **Tie-aware preference training.** Every prior work drops ties.
+6. **Leave-one-language-out generalization** across Indic–English pairs.
+7. **Practical size** (10–25× smaller than SpeechJudge's 7B).
 
 **Not claimed:** "first code-switched naturalness predictor" (SpeechJudge covers Mandarin–English).
 

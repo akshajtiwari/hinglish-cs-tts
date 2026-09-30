@@ -1,6 +1,6 @@
-# SwitchMOS: Measuring Whether Mixed-Language Synthetic Speech Sounds Human
+# SwitchMOS: A Better Automatic Judge of Whether Synthetic Speech Sounds Human
 
-**Research proposal for a review committee** · Draft of 2026-09-30 · Author: Akshaj Tiwari
+**Research proposal for a review committee** · Draft of 2026-09-30 (reframed) · Author: Akshaj Tiwari
 
 This document assumes no background in speech technology. Every technical term is explained the first time it appears, and there is a glossary at the end (§14).
 
@@ -8,341 +8,255 @@ This document assumes no background in speech technology. Every technical term i
 
 ## 1. Summary
 
-Hundreds of millions of people in India speak in a mix of Hindi and English within a single sentence, for example *"मुझे office के लिए late हो गया"* ("I got late for office"). Computer voices, or **text-to-speech (TTS)** systems, are now used in voice assistants, customer-service calls, audiobooks, and accessibility tools. They increasingly speak this mixed language, but often sound unnatural at the exact moment the language changes.
+Computer voices, or **text-to-speech (TTS)** systems, now read news, answer customer-service calls, and power screen readers. Researchers and companies need a quick, cheap way to tell how *human* a voice sounds. The standard tool for that, **UTMOS** (2022), is an automatic judge trained to imitate human listeners.
 
-Today there is no automatic way to measure this. The standard tools that estimate "how human does this voice sound" give one number for a whole recording. They were trained almost entirely on English, and they are known to be unreliable for Hindi and for modern voices.
+But UTMOS was trained on older, mostly English voices, and it no longer keeps up:
+- On today's clean commercial voices it agrees with human listeners only about 51–54% of the time when choosing the better of two recordings, close to a coin toss. Humans agree with each other about 76% of the time.
+- It is weaker still on Indian languages and on speech that mixes languages in one sentence, which is how hundreds of millions of people speak (*"मुझे office के लिए late हो गया"*).
 
-We propose **SwitchMOS**, an automatic judge of speech naturalness that:
-
-1. Gives **one overall score** for a recording, like existing tools.
-2. Also gives **a score at every point where the language switches**, with a plain-language reason (e.g. "no natural slowdown before the English word; audible join").
-3. Learns mainly from **real recordings of bilingual people** and from **automatically constructed before/after comparisons**, so it needs far fewer expensive human ratings than existing approaches.
-
-We start with Hindi–English ("Hinglish"). If it works, we extend it to other Indian languages mixed with English, and later aim for a general tool that sits beside the current standard (UTMOS) in speech research.
+We propose **SwitchMOS**, a new automatic judge of **whole-recording naturalness** that:
+1. **Beats UTMOS where it fails**: modern voices, Indian languages, and mixed-language speech. It stays competitive on the classic benchmarks where UTMOS is strong.
+2. Learns from a **much broader mix of existing human-rated data** (English, Mandarin, Hindi, Tamil and 8 other Indian languages, including mixed-language recordings), using the design choices that published studies show matter most.
+3. Adds one new ingredient: a **local-event component** that looks closely at moments where speech often goes wrong, starting with the points where the language switches. It feeds that evidence into the overall score and explains where a recording sounds unnatural.
 
 ---
 
 ## 2. Background for non-specialists
 
-### 2.1 What is text-to-speech?
-A TTS system takes written text and produces spoken audio. Modern systems are neural networks trained on many hours of recorded speech. They can imitate a voice from a few seconds of example audio ("voice cloning").
+### 2.1 Text-to-speech
+A TTS system turns written text into spoken audio. Modern systems are neural networks trained on many hours of speech and can imitate a voice from a few seconds of example ("voice cloning").
 
-### 2.2 What is code-switching?
-**Code-switching** is changing language within a conversation or a single sentence. The point where the language changes is a **switch point**. In Hinglish, Hindi is usually written in Devanagari script (मुझे) and English in Latin script (office), which makes switches easy to find in text.
+### 2.2 How voice quality is measured
+- **Listening tests.** People rate recordings from 1 (bad) to 5 (excellent). The average is the **Mean Opinion Score (MOS)**. Alternatively, listeners hear two recordings and pick the better one (a **pairwise preference**).
+- **Automatic judges (MOS predictors).** Listening tests are slow and costly, so neural networks are trained to predict human ratings. UTMOS won the 2022 VoiceMOS Challenge and became a standard number in speech papers. Newer judges exist (UTMOSv2, SpeechJudge), but no single one has replaced it.
 
-### 2.3 How is voice quality measured today?
-- **Listening tests.** People listen and rate each recording from 1 (bad) to 5 (excellent). The average is the **Mean Opinion Score (MOS)**, a practice inherited from telephone-quality testing in the 1990s. A variant asks listeners to compare two recordings and say which sounds better (a **pairwise preference**).
-- **Automatic predictors.** Listening tests are slow and expensive, so researchers train neural networks to *predict* the MOS. The best known is **UTMOS** (2022), which won an international challenge (the VoiceMOS Challenge) and became a standard number reported in speech papers.
-
-### 2.4 Why existing predictors fall short here
-- They give **one number per recording**, so a problem lasting a quarter of a second at a switch gets averaged away.
-- They were trained mostly on **English**. On Hindi, UTMOS agrees with human ratings only weakly (correlation 0.26 in one published study, where 1.0 would be perfect).
-- On pairs of **modern** voices, UTMOS picks the one humans prefer only about 54% of the time, barely better than a coin toss.
+### 2.3 Code-switching
+**Code-switching** means changing language within a conversation or sentence. The moment the language changes is a **switch point**. Voices that handle each language well often stumble exactly there.
 
 ---
 
 ## 3. The problem
 
-Modern TTS usually gets the *words* right. What often sounds wrong is **how the voice moves from one language to the other**:
-- an abrupt change in pitch or loudness;
-- English words rushed or stretched unnaturally;
-- a faint "glued-together" sound (a **seam**), as if two recordings were joined.
+1. **Automatic judges don't track human judgment on modern voices.** A 2026 study measured how often judges pick the same recording as humans:
 
-Companies advertise "smooth switching", but nobody can measure it. Researchers building these voices therefore can't tell whether a change actually improved the switches.
+| Recordings | UTMOS | UTMOSv2 | Human-vs-human ceiling |
+|---|---|---|---|
+| Older research voices (BVCC) | 0.89 | 0.90 | 0.89 |
+| Clean commercial voices | **0.51** | **0.53** | 0.76 |
 
-**A key scientific insight shapes our approach.** Studies of real bilingual speakers (Spanish–English, French–English, Greek–English, and Hindi–English) show that people do **not** switch perfectly smoothly. They tend to slow down slightly before a switch, and say the switched word a little longer and with more pitch movement. Listeners use these cues to follow the change. So the right target is not "no change at the switch" but **"the kind of change a real bilingual person makes"**.
+2. **They fail outside English.** UTMOS scored below 0.35 correlation with humans on French voices; general judges reached about 0.29 on Indian languages.
+3. **They average away brief problems.** A judge that gives one number for a whole recording barely notices a quarter-second glitch at a language switch, even though listeners do.
+4. **Mixed-language speech has no dedicated measure.** Yet it's how hundreds of millions of people speak, and companies advertise "natural switching" without any way to check it.
+
+**A scientific insight about switches.** Studies of real bilingual speakers show they do not switch perfectly smoothly. They slow down slightly before the switch and say the switched word a little longer, with more pitch movement. Listeners use these cues. So our switch component asks "does this switch sound like a real bilingual?", not "is it smooth?".
 
 ---
 
 ## 4. Research perspective
 
-### 4.1 Research questions
-1. **RQ1:** Can an automatic judge identify *where* in a mixed-language recording the switching sounds unnatural, in agreement with human listeners?
-2. **RQ2:** Does paying explicit attention to switch points make an automatic judge agree better with human preferences on mixed-language speech?
-3. **RQ3:** Can most of the learning come from real bilingual recordings and automatically built comparisons, reducing the number of human ratings needed?
-4. **RQ4:** Does a judge trained on some Indian languages work on an Indian language it has never seen?
+### 4.1 Thesis
+How natural a recording sounds depends on **overall quality** *and* on **specific local moments** (language switches, glued-together joins, names, numbers). Today's judges fail for two reasons:
+- they learned from narrow, old, mostly English data;
+- they treat the recording as one undifferentiated block.
 
-### 4.2 Hypotheses
-- **H1:** Natural switches in real Hinglish speech show measurable patterns (slowing before, lengthening of the switched word, wider pitch range) compared with ordinary word boundaries.
-- **H2:** Synthetic voices depart from these patterns in ways listeners notice.
-- **H3:** A model trained on "same recording, only the switch changed" pairs learns switch-specific naturalness that general predictors miss.
+A better judge needs broader training data, better training methods, and the ability to look closely at local moments.
 
-### 4.3 What counts as success
-Stated in advance, before any results are seen (§10). In short: the per-switch scores must agree with human listeners, and the full model must beat the same model *without* switch attention on mixed-language recordings.
+### 4.2 Research questions
+| # | Question | Role |
+|---|---|---|
+| **RQ1** | Can a judge trained on a broad mix of existing human ratings beat UTMOS and UTMOSv2 on modern, Indian-language, and mixed-language speech, while staying competitive on classic benchmarks? | **Main question** |
+| RQ2 | Does looking closely at language switches improve the overall score on mixed-language speech, without hurting single-language speech? | Tests our new component |
+| RQ3 | Can automatically built "before/after" recordings replace expensive human ratings for teaching the model about local problems? | Cost / label efficiency |
+| RQ4 | Does the judge work on languages and voices it has never seen? | Generalization |
+
+### 4.3 Hypotheses
+- **H1:** Training data diversity and preference-based training close most of the gap on modern and Indian-language speech.
+- **H2:** On mixed-language recordings, switch-level evidence adds information the overall-quality components miss.
+- **H3:** Real Hinglish switches show measurable patterns (slowing, lengthening, pitch range), and synthetic voices depart from them in ways listeners notice.
+
+### 4.4 What counts as success
+Fixed in advance (§10): beat UTMOSv2 on modern, Indian-language, and mixed-language tests; stay close to it on classic tests; and show the switch component adds a significant gain on mixed-language speech.
 
 ---
 
-## 5. Novelty: what exists and what is new
+## 5. Novelty
 
-### 5.1 Closest existing work
-| Work | What it does | What it lacks for our problem |
+### 5.1 Existing work
+| Work | What it does | Limitation |
 |---|---|---|
-| UTMOS / UTMOSv2 (2022, 2024) | Predicts overall quality from audio | One score per clip; English-centric; unreliable on modern voices |
-| SpeechJudge (2026) | Large (7-billion-parameter) judge trained on 99,000 human comparisons, including Mandarin–English mixed speech | No per-switch scores; not Indian languages; very large; discards "no preference" answers |
-| SpeechArenaBench (2026) | 120,000+ human comparisons of TTS in 10 Indian languages | A dataset, not a judge; only a simple model over human ratings |
-| DAMOS (2026) | Finds distorted regions, then scores the clip | Generic distortions, not language switches; small improvement |
-| "Join cost" (1990s) | Measured discontinuity where recorded snippets were glued | Assumes less change is always better; abandoned with neural TTS |
+| UTMOS (2022) | Standard automatic judge | Old English data; near chance on modern voices |
+| UTMOSv2 (2024) | Adds an image-like spectrogram view, more data | Still English-centric; near chance on commercial voices |
+| SpeechJudge (2026) | 7-billion-parameter judge, 99,000 human comparisons, includes Mandarin–English mixed speech | Very large; no Indian languages; one score per clip; discards "no preference" answers |
+| IndicMOS (2024) | Judge for 7 Indian languages | Small, older data; no mixed-language speech |
+| SpeechArenaBench (2026) | 120,000+ human comparisons in 10 Indian languages | A dataset; no audio-based judge trained on it |
+| DAMOS (2026) | Finds distorted regions, then scores | Generic distortions; small improvement |
 
-### 5.2 What is new in our work (checked by literature search, Sept 2026)
-1. **Scores for each language switch** inside a naturalness judge. Not found in any prior work.
-2. **Training from "minimal pairs"**: the same real recording with only the switch regenerated, so any difference is due to the switch alone. No prior quality judge has been trained this way.
-3. **First judge trained on SpeechArenaBench**, the Indian-language human-preference dataset.
-4. **Using "no preference" answers** in training, which all prior work discards.
-5. **Testing on unseen languages** (train on some Indian languages, test on another).
-6. **Small and practical:** 25–100 times smaller than SpeechJudge, runnable by ordinary labs.
+### 5.2 What is new
+1. **A broad multilingual training mix for a naturalness judge:** absolute ratings and comparisons across English, Mandarin, 10 Indian languages, and mixed-language speech. No published judge combines these.
+2. **First judge trained on SpeechArenaBench.**
+3. **A local-event component** that scores language switches inside a naturalness judge. Not found in prior work.
+4. **Training the local component with "before/after" recordings**: the same real recording with only one moment regenerated. No quality judge has been trained this way.
+5. **Using "no preference" answers** in training, which prior work discards.
+6. **Practical size:** 10–25 times smaller than SpeechJudge.
 
-### 5.3 What we do *not* claim
-- Not the first judge for mixed-language speech: SpeechJudge covers Mandarin–English.
-- Not a replacement for UTMOS on ordinary single-language speech.
-- Not a detector of whether speech is human or AI (§12).
-
-### 5.4 Why this wasn't done earlier
-Quality scoring came from telephony (one number per call). The old join-cost measures were dropped when neural voices removed explicit joins. Mixed-language TTS research spent years just making it work at all. The finding that real switches are "marked" sits in linguistics journals that speech engineers rarely read. And the enabling resources are new: the HiACC Hinglish corpus (2025), a multilingual alignment tool (MMS, 2023), and SpeechArenaBench (2026).
+### 5.3 Not claimed
+- Not the first judge for mixed-language speech (SpeechJudge covers Mandarin–English).
+- Not a detector of human-vs-AI speech (§12).
+- Not necessarily better than UTMOS on old English benchmarks; there we aim to stay close.
 
 ---
 
 ## 6. Value to society
 
-### 6.1 Who benefits
-- **Speakers of mixed languages.** Around 250 million Indians code-switch daily; worldwide, code-switching is the norm in many communities. Voices that sound natural to them improve access to services.
-- **Accessibility.** Screen readers and reading aids for people with visual impairments or low literacy increasingly use TTS. Unnatural mixed speech is tiring and harder to understand; a published study found that listeners understand words just after a switch less well in synthetic speech.
-- **Public services and small businesses.** Helplines, banking, healthcare reminders, and agricultural advisories in India use voice. A free, open measure lets smaller organisations check voice quality without costly listening tests.
-- **Research.** A shared, open measure lets researchers compare systems fairly and track progress on a problem nobody can currently measure.
-- **Better speech recognition.** Synthetic mixed speech is used to train speech-to-text systems. A quality filter keeps unnatural examples out of that training.
+- **Better voices for mixed-language speakers.** A reliable judge lets developers improve voices for the ~250 million Indians who code-switch daily, and for mixed-language communities worldwide.
+- **Accessibility.** Screen readers and reading aids for people with visual impairments or low literacy increasingly use TTS; more natural voices are less tiring and easier to understand.
+- **Public services.** Helplines, banking, healthcare reminders, and farm advisories in India use voice. An open judge lets small organisations check quality without costly listening tests.
+- **Research.** A judge that works on modern and multilingual voices restores a trustworthy shared measure, and its explanations show developers *where* to improve.
+- **Safer training of voices.** Judges are now used as automatic rewards when training TTS; a judge that can be "fooled" leads to worse voices. We test for this.
 
-### 6.2 Risks and how we handle them
-| Risk | Our position |
+**Risks and responses**
+| Risk | Response |
 |---|---|
-| More natural synthetic voices could make impersonation easier | We measure naturalness; we do not release a new voice generator. The tool's per-switch explanations are also useful for spotting imperfect synthetic speech. Voice-cloning safeguards remain the responsibility of TTS developers |
-| Bias toward one variety of Hinglish (e.g. urban, educated speakers) | We document speaker demographics (age, gender) and state the limitation; later stages add more speakers and regions |
-| Treating the score as absolute truth | Always reported alongside other measures and human tests; we publish its limits |
-| Human raters' welfare and privacy | Informed consent, fair pay, no personal data kept |
+| Better voices could aid impersonation | We release a judge, not a voice generator; safeguards belong to TTS developers |
+| Bias toward some speakers or dialects | Document the data; report results per language; widen coverage in later stages |
+| Over-trusting a single number | Always report alongside human tests and other measures; publish limits |
+| Rater welfare | Consent, fair pay, no personal data |
 
 ---
 
 ## 7. Approach at a glance
 
 ```
-            ┌──────────────────────────── A recording + its text ────────────────────────────┐
-            │                                                                                  │
-   1. Find where each word starts and ends          2. Turn the audio into features with a
-      (forced alignment)                               pretrained multilingual speech model
-            │                                                                                  │
-   3. Mark every language switch                                                               │
-            │                                                                                  │
-   4. Measure each switch: pauses, speed,                                                      │
-      pitch, loudness, "join" sound                                                            │
-            │                                                                                  │
-            ▼                                                                                  ▼
-   ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
-   │ Switch expert   │   │ Whole-clip      │   │ Artefact expert │   5. Three specialist
-   │ (each switch)   │   │ expert          │   │ (glitches)      │      sub-models ("experts")
-   └────────┬────────┘   └────────┬────────┘   └────────┬────────┘
-            └──────────── 6. A "gate" decides how much to trust each ─────────┘
-                                          │
-                     Overall score  +  a score and reason for every switch
+                        A recording (+ its text, language)
+                                      │
+      ┌───────────────────────────────┼───────────────────────────────┐
+      ▼                               ▼                               ▼
+ Semantic view                  Acoustic view                  Local-event view (new)
+ (pretrained multilingual       (spectrogram "image"           find switch points; measure
+  speech model)                  of the sound)                  pauses, speed, pitch, joins
+      │                               │                               │
+      └────────────── combined, informed by dataset / listener / language tags ──┘
+                                      │
+                 Overall naturalness score  +  where it sounds unnatural, and why
 ```
 
-**Where the knowledge comes from:**
-| Source | Teaches the model | Cost |
+**Where the knowledge comes from**
+| Source | Teaches | Cost |
 |---|---|---|
-| Real bilingual recordings | What natural switches sound like | Free (existing public corpora) |
-| Minimal pairs (same clip, only the switch regenerated) | What a bad switch sounds like, at the exact location | Computer time only |
-| Human comparisons (SpeechArenaBench) | How people judge whole recordings | Already collected by others |
-| Our small listening study | Whether per-switch scores match people | ~500 short clips, 5–8 listeners |
+| Existing human ratings (SOMOS, BVCC, SpeechJudge, MANGO, SpeechArenaBench) | How people judge whole recordings, across languages and voice generations | Already collected by others |
+| Real bilingual recordings (HiACC, MUCS) | What natural switches sound like | Free |
+| "Before/after" recordings | What a bad local moment sounds like, exactly where it is | Computer time |
+| A small listening study of our own | Whether the switch explanations match people | ~500 short clips, 5–8 listeners |
 
 ---
 
-## 8. How we will build it: step by step, with every decision explained
+## 8. Steps, with every decision explained
 
-Each step lists **what** we do, **why**, the **tools** and what they are for, the **decisions** made (with alternatives), the **output**, and a **gate**: a check that must pass before continuing.
-
-### Step 0 — Settle key decisions (a few days)
-| Decision | Choice | Why |
+### Step 1 — Gather and harmonize human-rated data (2 weeks)
+| Dataset | Content | Why |
 |---|---|---|
-| Name | "SwitchMOS" (working) | Signals a MOS-style score with switch awareness. An earlier name, "Switch Discontinuity Score", wrongly implied less change is better |
-| Lead claims | Per-switch scores + fewer human labels | Most likely to hold (§10.3); the overall-score gain is less certain |
-| Loanwords ("office", "phone") | Count as switches but tag them; report with and without | Linguists debate whether everyday borrowed words are true switches |
-| Fully romanised Hinglish ("mujhe office late…") | Out of scope for version 1 | Script can't reveal the language; needs an extra word-level language tool |
+| SOMOS | 20,000 English clips, 375,000 ratings | Large; teaches the 1–5 scale |
+| BVCC (+ "zoomed" version) | Classic English benchmark | Lets us compare with UTMOS directly |
+| SpeechJudge-Data | 99,000 comparisons of modern voices, incl. Mandarin–English mixed | Modern voices; mixed-language speech |
+| MANGO | Hindi and Tamil ratings (MUSHRA, a 0–100 comparative scale) | Indian-language absolute ratings |
+| SpeechArenaBench | 120,000+ comparisons, 10 Indian languages, 78% mixed-language sentences, 6 detailed quality ratings | Modern Indian-language and mixed speech |
 
-### Step 1 — Check the data (1 week)
-**What.** Confirm the amount and meaning of the data we rely on.
+**Decisions**
+- **Research-only licence.** Several key datasets forbid commercial use, so the released judge is for research. This allows the strongest data mix.
+- **Common format.** Every item is stored as recording, system, listener, dataset, and label type, so absolute scores and comparisons can train together.
+- **Hold out whole voices, languages, listeners, and sentences** for testing, so results show real generalization, not memorization.
+- **Check the commercial voices' terms of service.** SpeechArenaBench recordings come from company products whose terms may limit training use.
 
-| Data | What it is | Why we use it |
+### Step 2 — Measure the current judges (1–2 weeks)
+Run UTMOS, UTMOSv2, DNSMOS, and SpeechJudge on every test set. **Why:** this gives the exact numbers to beat and shows *where* each fails before we build anything. **Gate:** reproduce UTMOS's published score on BVCC (≈0.897), proving our test setup is correct.
+
+### Step 3 — Build the overall judge (3–4 weeks)
+| Choice | Decision | Why |
 |---|---|---|
-| **SpeechArenaBench** (AI4Bharat, MIT licence) | 120,000+ human "A vs B" judgments of 7 commercial TTS systems in 10 Indian languages. We counted **4,035 mixed-language Hindi comparisons** (2,493 sentences, 198 listeners) | The only large source of human judgments of Indian mixed-language TTS |
-| **HiACC** (2025) | 5.2 hours of real Hinglish from 44 speakers, with each word labelled Hindi or English | Natural switches from real people; our reference for "natural" |
-| **MUCS 2021** | ~95 h Hindi–English and ~53 h Bengali–English lecture speech | More natural switches; Bengali allows a second language |
+| Pretrained speech model | Multilingual (w2v-BERT 2.0, mHuBERT-147, or XLS-R), picked by a small trial | English-only models transfer poorly to Indian languages |
+| Which internal layers | Learn a weighted mix | Different layers carry quality vs intelligibility; the biggest single effect in a 2026 study |
+| Spectrogram view | Add a small image-style network | UTMOSv2 showed it improves absolute scores; combining both views beats either |
+| Dataset and listener tags | Include | Different datasets use different scales; listener information was UTMOS's largest single gain |
+| Learning from comparisons | Bradley–Terry method, with Davidson's extension for ties | Better than predicting numbers directly on comparison data; uses "no preference" answers |
+| Training order | Train parts separately, freeze, combine, then fine-tune gently | The largest factor in UTMOSv2's success |
+| First experiments | Vary the data mix | Data diversity is the biggest lever in the literature |
 
-**Decisions.**
-- *Count mixed-language comparisons in the other nine languages*, because testing on unseen languages (RQ4) needs enough data in each (target ≥500).
-- *Interpret unusual labels*: some SpeechArenaBench answers name two systems as preferred, and 677 Hindi answers are ties. We decide how to treat them before training.
-- *Re-split HiACC by speaker.* We discovered HiACC's published train/test split puts the same 24 speakers in every part. We made our own split so that no speaker appears in more than one role:
+**Gate:** beats UTMOSv2 on a development split of modern and Indian-language comparisons.
 
-| Role | Speakers | Used for |
+### Step 4 — Add the local-event component (3–4 weeks)
+| Sub-step | Method | Why |
 |---|---|---|
-| Reference | 6 (3 women, 3 men) | Defining "natural switch" and building minimal pairs |
-| Test | 6 (3 women, 3 men) | The human study and test clips only |
-| Fine-tune | 12 | An optional side experiment (§8, optional) |
+| Standardize audio | 16 kHz, remove sound above 8 kHz | Real Hinglish recordings are 16 kHz; matching prevents "synthetic" being detected from bandwidth |
+| Find word timings | uroman (writes any script in Latin letters) + MMS aligner (finds when each word is spoken) | Works for 1,100+ languages without a dictionary |
+| Mark switches | Devanagari = Hindi, Latin = English | Free and accurate for our data |
+| Measure each switch | Pause, speed before/after, word lengthening, pitch jump and range, loudness jump, "join" sound | Each matches a pattern in bilingual-speech research or a classic join measure |
+| Check real switches | Do real Hinglish switches show the predicted patterns? | If not, rely on learned features only |
+| Build "before/after" pairs | Regenerate only a switch with IndicF5; pass both versions through the same audio converter; also edit non-switch words as a control | Teaches the component exactly where problems are, without human labels, and prevents it learning "was edited" |
+| Check pairs | Listen to 20 pairs: do edits sound worse? | If not, use simple edits that are worse by construction |
+| Integrate | Feed switch scores into the overall judge; let one bad switch pull the score down | Listeners notice one bad moment |
 
-*Why this matters:* if the same person's voice were used both to build the tool and to test it, the tool could look good simply by recognising that person.
+**Gate (RQ2):** the component improves the overall score on mixed-language test comparisons. If not, it stays as an explanation tool only.
 
-**Gate:** enough mixed-language comparisons exist for the languages we plan to test.
+### Step 5 — Small listening study (2 weeks)
+**Why:** no dataset rates individual switches, so without this we can't show the explanations match people.
+- 5–8 paid, consenting Hindi–English bilinguals; about 500 short clips centred on switches.
+- Clips are chosen where the model is least sure (**active learning**).
+- A 50-clip pilot must show listeners agree with each other (Krippendorff's α ≥ 0.5).
 
-### Step 1.5 — Check there is room for a switch-aware model (1 week, in parallel)
-**What.** Train a plain model (no switch attention) on the human comparisons. Then ask: when it gets a mixed-language comparison wrong, do switch measurements explain the mistake?
-
-**Why.** If a plain model already handles switches, building a switch expert adds little. This check costs one week and could save months.
-
-**Decision:** compare sentences of similar length, because mixed-language sentences are also longer and harder, which would otherwise confuse the comparison.
-
-**Gate:** switch measurements explain a meaningful share of the plain model's errors. If not, we drop the overall-score claim and lead with per-switch scores.
-
-### Step 2 — Check that minimal pairs are feasible (1 week)
-**What.** Take a real Hinglish recording, regenerate *only* the switch region with a TTS model, and compare.
-
-**Tools and why.**
-- **IndicF5** (AI4Bharat): an open TTS model for 11 Indian languages that can regenerate part of a recording while keeping the rest ("infilling"). Chosen because it's open, Indian-language, and supports this editing mode.
-- **A vocoder** turns the model's internal spectrogram into sound. Editing passes the *whole* recording through it, so we also pass the untouched original through the same vocoder. Otherwise the model would learn to spot "was processed", not "sounds unnatural".
-
-**Decisions.**
-- Measure time per edit on our GPUs (the A16 is a slow card; §9).
-- **20-pair listening check:** do edited switches actually sound worse? If regenerated switches sound just as good, the pairs would teach nothing.
-
-**Gate:** editing works and edits sound worse. Otherwise we fall back to simple audio edits (joining, pitch jumps, wrong durations), which are clearly worse by construction.
-
-### Step 3 — Find and measure switches (2 weeks)
-**What and why, sub-step by sub-step.**
-
-| Sub-step | Tool / method | What it's for | Why this choice |
-|---|---|---|---|
-| Standardise audio | Resample to **16 kHz** (16,000 samples per second) and remove sound above **8 kHz** | Make all recordings comparable | HiACC was recorded at 16 kHz, which holds sound only up to 8 kHz. Synthetic voices go up to 12 kHz; without matching, the tool would detect "synthetic" from bandwidth alone |
-| Equalise loudness | Scale to the same average level | Prevent quiet recordings looking like loudness jumps | — |
-| Label each word's language | Script: Devanagari = Hindi, Latin = English | Find switches | Free and accurate for HiACC and SpeechArenaBench text |
-| Find word timings | **uroman** (converts any script to Latin letters) + **MMS forced aligner** (Meta; given audio and its text, finds when each word is spoken) | Know *when* each switch happens | Handles 1,100+ languages without a pronunciation dictionary |
-| Check timing accuracy | Hand-mark 20 switches in **Praat** (standard phonetics software) | Aligner must be accurate to ≤25 ms | Measurements are taken in ~100 ms windows; larger errors would blur them |
-| Measure each boundary | Pause length; speaking speed before vs after; how stretched the switched word is; pitch jump and range (two pitch trackers must agree, to avoid errors); loudness jump; spectral "join" distance | Describe what happens at the switch | Each corresponds to a pattern reported in bilingual-speech research, or to the classic join-cost measure of seams |
-| Compare with the rest of the sentence | Subtract the same measurements at ordinary word boundaries | Remove differences due to speaker, microphone, speaking style | Otherwise a naturally slow speaker would look "unnatural" everywhere |
-
-**Gate (H1):** in real Hinglish, switches differ from ordinary boundaries in the predicted ways (at least two of: slowing before, lengthening, wider pitch). If not, the switch expert uses only learned features, not these hand-designed ones.
-
-### Step 4 — Pre-compute (1 week)
-**What.** Run the heavy processing once and save the results: word timings, switch measurements, and features from the pretrained speech model.
-
-**Pretrained speech model (encoder).** A neural network pretrained on thousands of hours of unlabelled speech that turns audio into numerical features. We use a **multilingual** one (mHuBERT-147 or XLS-R), because the English-trained ones (e.g. WavLM) are weaker on Indian languages. We compare candidates in a small pilot.
-
-**Why pre-compute:** our GPUs are slow; doing this once instead of every training round saves days.
-
-### Step 5 — Build training pairs (1–2 weeks)
-| Pair type | How | Teaches |
-|---|---|---|
-| Regenerated switch | Real clip vs same clip with the switch regenerated (both through the same vocoder) | What an unnatural switch sounds like, exactly where it is |
-| Spliced | Two real segments glued at the switch | Seams |
-| Flattened | Natural slowdown and pitch movement removed | "Robotic" switches |
-| Exaggerated | Long pause or pitch jump inserted | Overdone switches |
-| **Non-switch edit (control)** | Regenerate a non-switch word; the model must *not* prefer either version | Prevents the model from simply detecting "was edited" |
-
-**Sources:** the 6 reference speakers and MUCS, never the 6 test speakers.
-
-### Step 6 — Train the model (3–4 weeks)
-
-**Components and their purpose.**
-| Component | Purpose | Why |
-|---|---|---|
-| **SwitchLM** (small model trained only on real mixed speech) | Estimates how *surprising* each switch is compared with real speech | Needs no human labels. Published evidence shows such signals are weak alone, so we use it as one input, not the final score |
-| **Switch expert** | Scores each switch from a ±0.5–1 s window | Looks only at the switch region, so problems elsewhere don't leak in |
-| **Whole-clip expert** | Scores the overall recording | Captures voice quality, expressiveness, everything besides switches |
-| **Artefact expert** (optional) | Looks for glitches in the spectrogram image | A lesson from UTMOSv2, whose image-based branch helped predict absolute quality |
-| **Gate** | Decides how much each expert counts for this recording | A recording with many switches should lean on the switch expert; one with none should not |
-| **"Worst switch" pooling** | Lets a single bad switch lower the overall score | Listeners notice one bad moment more than an average suggests |
-| **Listener, language and dataset tags** | Tell the model who rated, which language pair, which dataset | UTMOS's own analysis found this the single most helpful idea |
-
-**Training order** (training parts separately, then together, was the biggest factor in UTMOSv2's success):
-1. SwitchLM on real mixed speech.
-2. Switch expert on the pairs from Step 5.
-3. Whole-clip and artefact experts on human comparisons.
-4. Gate only, with the experts fixed.
-5. Everything together, gently.
-
-**How the model learns from comparisons.** We use the **Bradley–Terry** method: for each human "A is better than B", the model is adjusted so A's score exceeds B's. A published comparison found this works better than predicting 1–5 numbers directly. We add **Davidson's extension**, which also learns from "no preference" answers; all prior work throws these away.
-
-**Data splits.** We keep entire TTS systems, languages, listeners, and sentences out of training, so tests measure genuine generalisation, not memory.
-
-### Step 7 — Human listening study (2 weeks)
-**Why needed:** no existing dataset rates individual switches, so without it we couldn't show our per-switch scores mean anything to people.
-
-| Item | Plan | Why |
-|---|---|---|
-| Listeners | 5–8 fluent Hindi–English bilinguals, headphones, screened, paid, consenting | Native judgment of switches |
-| Clips | ~500 short excerpts centred on a switch (~1.5 s), full sentence available | Focus attention on the switch |
-| Which clips | Chosen where the model is *least sure*, in two or more rounds (**active learning**) | Gets more information per rating; published work shows gains from the second round |
-| Tasks | Rate switch naturalness 1–5; mark where it sounds wrong; identify the word after the switch in background noise | Opinion, location, and an objective comprehension measure |
-| Pilot first | 50 clips, 3 listeners; listener agreement must reach a set minimum (Krippendorff's α ≥ 0.5) | If people don't agree with each other, no tool can agree with them |
-
-### Step 8 — Evaluate (1–2 weeks)
-See §10.
-
-### Step 9 — Release and publish (2 weeks)
-- Release the model, code, and rated clips openly, installable in one command, so others can use and check it.
-- Write the paper for **Interspeech**, the main international speech conference.
-
-### Optional, in parallel — a Hinglish voice experiment
-Fine-tune IndicF5 on real Hinglish conversation (the 12 "fine-tune" speakers) and check with SwitchMOS whether switching improves. This provides an extra voice to test and a practical use case. Server environment and scripts are prepared; training starts only after code review.
+### Step 6 — Full evaluation, release, paper (3 weeks)
+Run every test (§10). Release the judge, code, test splits, and ratings openly. Write the paper for Interspeech.
 
 ---
 
 ## 9. Resources and timeline
 
-**Computing.** One server with 4 NVIDIA A16 GPUs (16 GB memory each), 480 GB RAM, 32 CPU cores, 4.6 TB disk. Each A16 is roughly one-sixth the speed of a common research GPU (RTX 3090), which is why we pre-compute features and keep the model small. The main time cost is generating edited pairs, estimated at a few days.
+**Computing:** one server with 4 NVIDIA A16 GPUs (16 GB each), 480 GB RAM, 32 CPU cores, 4.6 TB disk. Each A16 is roughly one-sixth the speed of a common research GPU, so we compute features once and store them, and keep the new parts of the model small.
 
-**People.** One researcher; 5–8 paid bilingual listeners for about two weeks.
+**People:** one researcher; 5–8 paid bilingual listeners for about two weeks.
 
-**Timeline (part-time):**
+**Timeline:** about 16–20 weeks part-time.
 | Weeks | Steps |
 |---|---|
-| 1–2 | 0, 1, 1.5, 2 (the cheap checks that decide the design) |
-| 3–5 | 3, 4 |
-| 6–7 | 5 |
-| 8–11 | 6 |
-| 12–13 | 7 |
-| 14–15 | 8 |
-| 16–17 | 9 |
-
-**Total:** about 14–18 weeks.
+| 1–2 | 1 (data) |
+| 3–4 | 2 (current judges) |
+| 5–8 | 3 (overall judge) |
+| 7–11 | 4 (local-event component, overlapping) |
+| 12–13 | 5 (listening study) |
+| 14–17 | 6 (evaluation, release, paper) |
 
 ---
 
 ## 10. How success will be judged
 
 ### 10.1 Tests
-| Test | Question |
-|---|---|
-| With vs without switch expert | Does paying attention to switches improve agreement with humans on mixed-language recordings, without hurting single-language ones? |
-| Unseen TTS systems | Does it work on voices it never trained on? |
-| Unseen languages | Train on nine Indian languages, test on the tenth |
-| Locating edits | Do per-switch scores point to the regenerated switches in held-out pairs? |
-| Matching listeners | Do per-switch scores agree with the human switch ratings? |
-| Label efficiency | How accuracy grows as we use 10%, 25%, … 100% of human comparisons |
-| Robustness | Stable when volume, recording format, or word timings shift slightly |
-| Standard benchmarks | A "no harm" check on the VoiceMOS 2022/2023 and SOMOS datasets. **We expect to trail UTMOS here** and say so in advance, because those datasets contain no language switches |
+| Group | What | Role |
+|---|---|---|
+| Modern voices | Comparisons from SpeechJudge, MOS-RMBench, and clean commercial voices | **Main** |
+| Indian languages | SpeechArenaBench (held-out voices and languages), MANGO | **Main** |
+| Mixed-language | Mixed-language subsets of SpeechArenaBench and SpeechJudge | **Main** |
+| Classic benchmarks | BVCC, SOMOS, VoiceMOS 2023/2024, Mandarin Blizzard 2019 | "No harm" |
+| Switch explanations | Before/after pairs with known locations; our listening study | Validates the explanations |
+| Other speech | Conversational, emotional, long recordings | Generalization |
+| Robustness | Volume, format, timing shifts; training a voice against the judge to see if it can be fooled | Safe to use |
 
-**Comparisons:** UTMOS, UTMOSv2, SpeechJudge, the same model without the switch expert, a trivial "longer recording wins" rule (length is a known source of false success), and the hand-designed switch measurements alone.
+**Compared against:** UTMOS, UTMOSv2, DNSMOS, SpeechJudge, a trivial "longer recording wins" rule, our judge without the switch component, and our judge trained only on UTMOS's data (to separate the effect of data from design).
 
 ### 10.2 Pass criteria (fixed in advance)
-- The switch expert improves agreement on mixed-language comparisons from unseen systems, confirmed statistically (paired bootstrap, p < 0.05), with no loss on single-language ones.
-- Per-switch scores locate edited switches well (AUC ≥ 0.8, where 0.5 is chance and 1.0 perfect) and correlate positively and significantly with human switch ratings.
+1. Beat UTMOSv2 on modern, Indian-language, and mixed-language tests (statistically confirmed).
+2. Within a small margin of UTMOSv2 on classic tests.
+3. The switch component gives a significant gain on mixed-language tests, with no loss elsewhere.
+4. Match SpeechJudge's smaller model (72.7%) on its own test, at a fraction of the size.
 
 ### 10.3 Honest expectations
-| Claim | Expected strength |
+| Claim | Expectation |
 |---|---|
-| Beats UTMOS on Hindi mixed speech | High, but mainly because we train on the right data |
-| Per-switch scores locate problems | Fairly high |
-| Needs fewer human labels | Fairly high |
-| Per-switch scores match listeners | Moderate |
-| Switch expert improves the overall score | Uncertain; a similar published idea gained little |
-| Works on unseen languages | Unknown until data is counted |
+| Beats UTMOS/UTMOSv2 on Indian and mixed-language speech | High, partly thanks to training data; a data-only comparison shows how much |
+| Beats them on modern voices | Fairly high |
+| Competitive on classic benchmarks | Fairly high |
+| Switch component improves the overall score | Uncertain; similar published ideas gained little |
+| Matches SpeechJudge | Uncertain |
 
-If the overall-score improvement doesn't appear, that is itself a publishable finding ("listeners' overall judgments do not hinge on switches"), and the per-switch tool, the minimal-pair method, and the rated dataset remain contributions.
+If the switch component doesn't raise the overall score, the main result (a better judge for modern and multilingual speech) stands, and the switch explanations remain a useful diagnostic.
 
 ---
 
@@ -350,40 +264,35 @@ If the overall-score improvement doesn't appear, that is itself a publishable fi
 
 | Risk | Fallback |
 |---|---|
-| Model learns *which company* made the voice rather than quality (only 7 systems in the data) | Test on systems held out of training; add our own voices as extra tests |
-| Model learns to spot editing instead of unnaturalness | Same vocoder on both versions; "non-switch edit" controls; listening check |
-| Regenerated switches don't sound worse | Use simple audio edits that are worse by construction |
-| Real switches show no measurable pattern (H1 fails) | Switch expert relies on learned features only |
-| Few mixed-language comparisons in some languages | Test only languages with enough data |
-| Someone publishes first (the dataset is public) | Move quickly; the per-switch method and minimal pairs remain distinct |
-| Licence limits on some speech corpora (non-commercial) | Keep them out of the released model's training, or release it for research use only |
+| Different rating scales clash in training | Dataset tags with per-dataset offsets; stage-wise training |
+| Model learns *which company* made a voice | Test on voices held out of training |
+| Only 7 commercial voices in SpeechArenaBench | Combine with SpeechJudge and MANGO voices; add our own test voices |
+| Judge can be "fooled" when used as a training reward | Explicit test; recommend combining with other measures |
+| Before/after pairs teach "was edited" | Same audio converter on both; non-switch edit controls; listening check |
+| Terms of service of commercial voices | Legal check before release; research-only licence |
+| Someone publishes first | Move quickly; our combination (multilingual mix + local component) stays distinct |
 
 ---
 
 ## 12. Out of scope, and what each item means
 
-| Out of scope | What it means | Why excluded |
+| Out of scope | Meaning | Why |
 |---|---|---|
-| **Detecting AI vs human speech** ("deepfake detection") | Deciding whether a real person or a computer produced a recording | A different research field. A synthetic voice can sound fully natural; we measure naturalness, not origin |
-| **Building a new TTS system** | Creating a new voice generator | We measure voices. The optional IndicF5 experiment adapts an existing model only as a test case |
-| **Fully romanised Hinglish** ("mujhe office ke liye late ho gaya") | Hindi typed in English letters | Script can no longer reveal the language; needs a separate word-level language identifier (planned for version 2) |
-| **Speech recognition** (speech → text) | Converting audio to text | Different task; used only as a helper and a downstream application |
-| **Replacing UTMOS for single-language speech** | Becoming the general-purpose quality score | UTMOS remains appropriate there; we complement it |
-| **Audio quality problems unrelated to speech** (background noise, microphones) | Recording-condition issues | Covered by existing tools (e.g. DNSMOS) |
-| **Absolute 1–5 scores** as the main output | Predicting the exact MOS number | We learn from comparisons, which rank well; calibration to 1–5 is optional |
-| **Languages beyond Indian languages + English** in this project | e.g. Spanish–English, Mandarin–English | Planned for a later stage once the approach is proven (§13) |
-| **Emotion, speaker identity, pronunciation accuracy** | Other aspects of speech quality | Measured by other tools; reported alongside ours |
-| **Children's speech** | HiACC includes children | Different acoustics; kept for later robustness checks |
+| Human-vs-AI detection | Deciding whether a person or a computer spoke | Different field; a synthetic voice can sound fully natural |
+| Building a new TTS system | Creating a voice generator | We judge voices; an optional side experiment only adapts an existing one |
+| Fully romanised Hinglish | Hindi typed in English letters ("mujhe office late…") | Script no longer reveals the language; needs an extra tool (later version) |
+| Recording-quality assessment | Background noise, microphones | Existing tools (DNSMOS) cover it |
+| Beating UTMOS on old English benchmarks | Winning where UTMOS is already strong | Not our aim; we stay competitive there |
+| Commercial licence | Use in paid products | Key training data is non-commercial |
+| Emotion, speaker identity, pronunciation accuracy | Other aspects of speech | Other tools; reported alongside |
+| Children's speech | Young speakers | Different acoustics; later |
 
 ---
 
 ## 13. Beyond this project
-
-1. **Stage 1 (this proposal): Hinglish.** A validated tool and paper.
-2. **Stage 2: Indian languages mixed with English.** All 10 languages in SpeechArenaBench; the unseen-language test.
-3. **Stage 3: Universal.** Other language pairs (Spanish–English, Mandarin–English), and other local trouble spots in synthetic speech: names, numbers, emphasised words, joins between chunks in long recordings.
-
-The long-term aim: UTMOS reports **how natural** a recording is overall; SwitchMOS reports **where** it isn't.
+1. **Stage 1 (this proposal):** a better whole-recording judge, strongest on Hindi–English and Indian languages.
+2. **Stage 2:** all 10 Indian languages mixed with English; testing on unseen languages.
+3. **Stage 3:** more language pairs and more local moments (names, numbers, joins in long recordings), aiming for a judge reported beside UTMOS in speech research.
 
 ---
 
@@ -391,50 +300,34 @@ The long-term aim: UTMOS reports **how natural** a recording is overall; SwitchM
 
 | Term | Meaning |
 |---|---|
-| **Text-to-speech (TTS)** | Software that turns written text into spoken audio |
-| **Code-switching** | Changing language within a conversation or sentence |
-| **Switch point** | The place in a sentence where the language changes |
-| **Hinglish** | Hindi and English mixed in everyday speech |
-| **Devanagari / Latin script** | The writing systems for Hindi / English |
-| **MOS (Mean Opinion Score)** | The average of listeners' 1–5 ratings |
-| **Pairwise preference** | A listener hears two recordings and picks the better one (or says "no preference") |
-| **UTMOS** | A widely used automatic predictor of MOS (2022) |
-| **SpeechJudge** | A large automatic judge trained on human comparisons, including Mandarin–English mixed speech (2026) |
-| **SpeechArenaBench** | A public collection of 120,000+ human comparisons of TTS in 10 Indian languages |
-| **HiACC** | A public corpus of real Hinglish speech with each word labelled by language |
-| **MUCS** | Public Hindi–English and Bengali–English speech from a 2021 challenge |
-| **Neural network / model** | A computer program that learns patterns from examples |
-| **Training / testing** | Learning from examples / checking on examples not seen during learning |
-| **Encoder (pretrained speech model)** | A neural network that turns audio into numerical features, pretrained on large amounts of unlabelled speech |
-| **Forced alignment** | Finding when each word in a known text is spoken in the audio |
-| **MMS / uroman** | Meta's multilingual forced aligner / a tool that writes any script in Latin letters |
-| **Sampling rate (16 kHz)** | How many times per second sound is measured; limits the highest pitch recorded |
-| **Pitch (F0)** | How high or low the voice is |
-| **Seam** | An audible join, as if two recordings were glued together |
-| **Vocoder** | The part of a TTS system that turns an internal representation into sound |
-| **Minimal pair** | Two versions of a recording that differ only in one small part |
-| **Infilling** | Regenerating one part of a recording while keeping the rest |
-| **Expert / gate** | A specialised sub-model / a component deciding how much each expert counts |
-| **Bradley–Terry** | A method for learning scores from "A is better than B" judgments |
-| **Davidson's extension** | A variant that also learns from "no preference" answers |
-| **Active learning** | Choosing which examples humans should label, to learn the most per label |
-| **Correlation** | How closely two sets of numbers rise and fall together (1 = perfectly, 0 = unrelated) |
-| **AUC** | How well a score separates two groups (0.5 = chance, 1 = perfect) |
-| **Krippendorff's α** | How much human raters agree with each other |
-| **Bootstrap / p-value** | Statistical tools to check that a result isn't due to chance |
-| **GPU** | A processor specialised for the arithmetic of neural networks |
-| **Interspeech** | The main international conference on speech research |
+| Text-to-speech (TTS) | Software that turns text into spoken audio |
+| MOS | Average of listeners' 1–5 ratings |
+| Pairwise preference | Listener picks the better of two recordings (or "no preference") |
+| MOS predictor / automatic judge | Neural network trained to predict human ratings |
+| UTMOS / UTMOSv2 | Widely used automatic judges (2022 / 2024) |
+| SpeechJudge | Large (7B) automatic judge trained on human comparisons (2026) |
+| SpeechArenaBench | 120,000+ human comparisons of voices in 10 Indian languages |
+| SOMOS, BVCC, MANGO | Public datasets of human ratings (English; English; Hindi/Tamil) |
+| MUSHRA | A listening-test format scoring 0–100 against reference recordings |
+| Code-switching / switch point | Changing language / where it changes |
+| Pretrained speech model (encoder) | Network that turns audio into numerical features, trained on unlabelled speech |
+| Spectrogram | A picture of sound: frequency over time |
+| Forced alignment (MMS, uroman) | Finding when each word is spoken / tools that do it for any script |
+| Local event | A brief moment that can sound wrong: a switch, a join, a name |
+| Before/after pair (minimal pair) | Two versions of a recording differing in one small part |
+| Bradley–Terry (+ Davidson) | Method for learning scores from comparisons (including ties) |
+| Active learning | Choosing which clips humans rate, to learn most per rating |
+| Correlation / pairwise accuracy | How well the judge's scores / choices match humans |
+| Krippendorff's α | How much raters agree with each other |
+| GPU | Processor for neural-network arithmetic |
+| Interspeech | The main international speech-research conference |
 
 ---
 
 ## 15. Key references
-
-- Saeki et al., *UTMOS*, VoiceMOS Challenge 2022 (arXiv 2204.02152); Baba et al., *UTMOSv2* (arXiv 2409.09305).
-- Zhang et al., *SpeechJudge*, ICLR 2026 (arXiv 2511.07931).
-- Anand et al., *Preferences of a Voice-First Nation* / SpeechArenaBench, Interspeech 2026 (arXiv 2604.21481).
-- Singh, Singh & Kadyan, *HiACC*, Data in Brief 2025 (doi 10.1016/j.dib.2025.111886).
-- Li et al., *DAMOS* (arXiv 2608.21176); Kuhlmann et al., frame-level quality prediction, Interspeech 2025 (arXiv 2508.10374).
-- MOS-RMBench (arXiv 2510.00743) — Bradley–Terry vs regression for quality judges.
-- Rao et al., prosodic cues in Hindi–English code-switched discourse, Interspeech 2018; Fricke, Kroll & Dussias 2016; Olson 2016 — natural switch patterns.
-- Hunt & Black 1996 — join cost in concatenative synthesis.
-- Pratap et al., MMS (arXiv 2305.13516) — multilingual forced alignment.
+- UTMOS (arXiv 2204.02152); UTMOSv2 (2409.09305); SpeechJudge (2511.07931); MOS-RMBench (2510.00743).
+- "Limits of reference-free speech quality metrics" (2609.13150); VoiceMOS Challenges 2023/2024/2026 (2310.02640, 2409.07001, 2609.13792).
+- IndicMOS (Interspeech 2024); SpeechArenaBench / Preferences of a Voice-First Nation (2604.21481); MANGO (AI4Bharat).
+- DAMOS (2608.21176); frame-level quality prediction (2508.10374).
+- HiACC (Data in Brief 2025); MMS (2305.13516); Rao et al. 2018; Fricke et al. 2016; Olson 2016.
+- Full survey tables: `14_sota_and_datasets.md`.

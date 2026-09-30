@@ -1,60 +1,50 @@
-# 01 — Problem and idea
+# 01 — Problem, thesis, research questions
 
 ## The problem
 
-- Hinglish is everyday speech for roughly 250 million people. Voice assistants, call centres, and dubbing all need TTS that speaks it naturally.
-- Modern TTS gets the words right. What still sounds robotic is often the **moment of switching**: a flat or abrupt change, rushed English words, a pitch jump no person would make, a faint "glued together" seam.
-- We can't measure that automatically:
-  - Human listening tests (MOS) are slow and costly.
-  - Automatic MOS predictors score the whole clip, trained mostly on English. UTMOS agrees with humans only 53.7% of the time on modern TTS pairs, and reportedly penalizes code-switched transitions that humans find fine.
-  - Industry (Sarvam, Gnani, Gradium) markets "smooth switching" with no way to measure it.
+- Automatic naturalness predictors (UTMOS, 2022) replaced many listening tests and became a standard number in speech papers.
+- They no longer track human judgment on today's systems:
+  - Clean commercial TTS: UTMOS 0.51, UTMOSv2 0.53 pairwise agreement with humans (chance 0.50, human ceiling 0.76).
+  - Modern zero-shot TTS: UTMOS 53.7% on SpeechJudge-Eval.
+  - French: UTMOS below 0.35 system correlation (VoiceMOS 2023).
+  - Indian languages: off-the-shelf SSL-MOS at 0.29 utterance correlation.
+  - Conversational speech: UTMOSv2 correlates *negatively*.
+- Code-switched speech (e.g. Hinglish, "मुझे office के लिए late हो गया"), everyday for hundreds of millions of people, has no automatic naturalness measure at all, and its characteristic failures happen at the switch.
 
-## The key insight
+## Thesis
 
-Real bilinguals **don't** switch smoothly. They slow down before the switch, and say the switched word longer and with more pitch movement. Listeners use these cues. So the target isn't "no discontinuity"; it's "the discontinuity a real bilingual would produce".
+Perceived naturalness depends on **global quality** and on **local events**: language switches, seams, names, numbers. Current predictors fail for two reasons:
+1. They are trained on narrow, old, mostly English data.
+2. They pool the whole clip uniformly, so brief local problems are averaged away.
+
+So a better predictor needs a **diverse, mixed-objective training mix** and an **explicit local-event branch**.
+
+## The key insight about switches
+
+Real bilinguals don't switch perfectly smoothly. They slow down before a switch and say the switched word longer, with more pitch movement. Listeners use these cues. So the local-event branch measures how far a switch departs from the human pattern, not how "smooth" it is.
+
+## Research questions
+
+| # | Question | Role |
+|---|---|---|
+| **RQ1** | Can a predictor trained on a diverse mix of absolute-MOS and pairwise data beat UTMOS and UTMOSv2 on modern, Indic, and code-switched naturalness, while staying competitive on classic benchmarks? | **Headline** |
+| RQ2 | Does adding local-event (switch) evidence improve whole-clip accuracy on code-switched speech without hurting monolingual speech? | Key ablation |
+| RQ3 | Can synthetic minimal pairs replace human labels for local events? | Label efficiency |
+| RQ4 | Does it generalize to unseen languages and unseen TTS systems? | Generalization |
 
 ## What we build
 
-**SwitchMOS**, a naturalness predictor that:
-1. Outputs **one whole-clip score** (like any MOS predictor) **plus a score per language switch**, with a plain-language reason ("no slowdown before 'office'; seam likely").
-2. Works for **any code-switched language pair** in principle, and is tested on pairs it never trained on.
-3. Learns mostly from **real bilingual speech** and **automatically built minimal pairs** (the same clip with only the switch regenerated), using human ratings mainly to calibrate and test.
+- **SwitchMOS**: one whole-clip naturalness score, like UTMOS, plus per-event scores with plain-language reasons.
+- A released evaluation suite and a small human-rated set of switch clips.
+- An Interspeech paper.
 
-## Scope, honestly
+## Scope
 
-- **v1 is Hinglish-first.** Natural reference speech, human study, and most minimal pairs are Hindi–English.
-- **Designed to generalize to Indic–English pairs**, tested by leave-one-language-out on SpeechArenaBench. "Any two languages" is not claimed.
-- **Not handled in v1:** fully romanized Hinglish ("mujhe office ke liye late ho gaya") without word-level language tags.
-- **Relationship to UTMOS:** same family (neural predictor on a self-supervised encoder), reusing its proven ideas, but a switch-aware specialist, trained on preferences and minimal pairs, with per-switch output. Not a new general-purpose UTMOS, and not aiming to win the VoiceMOS 2022 leaderboard.
+- **Stage 1 (this project):** whole-clip naturalness with strength on Hindi–English; evaluated on classic English benchmarks, modern pairwise sets, 10 Indic languages, and Mandarin–English.
+- **Stage 2:** full Indic–English coverage, leave-one-language-out.
+- **Stage 3:** more language pairs and more local events (names, numbers, long-form chunk joins).
+- **Not in scope:** human-vs-AI detection; building a TTS system; fully romanized Hinglish without language tags; noise/recording-quality assessment.
 
-## Long-term vision: three stages
+## Why not just copy UTMOS
 
-| Stage | Scope | Data | Outcome |
-|---|---|---|---|
-| **1. Hinglish** (current) | Hindi–English | HiACC, MUCS, SpeechArenaBench Hindi, our human study | Validated SwitchMOS for Hinglish (paper 1) |
-| **2. Indic–English** | SpeechArenaBench's 10 languages | SpeechArenaBench, MUCS Bengali–English | Leave-one-language-out; the Indic standard |
-| **3. Universal** | Any code-switched pair, then other local events | Spanish–English (Bangor Miami), Mandarin–English (ASCEND, SpeechJudge), more to collect | A **local naturalness score used beside UTMOS**: UTMOS says how natural overall, SwitchMOS says where it isn't |
-
-**Hypothesized universal core** (to be tested, not assumed):
-- **Seams:** a glued join sounds wrong in any language. Most likely universal.
-- **Switch marking:** slowing before and lengthening at the switch appear in Spanish–, French–, Greek–English and Hinglish studies; strength varies by speaker and direction. Probably universal with per-pair calibration.
-- **Pitch patterns:** differ for tone languages (e.g. Mandarin). Pair-specific.
-
-**Beyond switches:** the same pipeline (align → locate events → score → train on minimal pairs) applies to other local trouble spots: names, numbers, emphasized words, joins between generated chunks in long-form TTS. That generalization is what could make a local score a routine companion to UTMOS.
-
-**Order matters:** stage 2 only after stage 1's per-switch scores match human judgments; stage 3 only after leave-one-language-out works in stage 2.
-
-## Why not just a switch-only score?
-
-A clip can be natural at the switch and robotic everywhere else. The headline number covers the whole clip; switch scores explain it and catch what whole-clip models miss.
-
-## Why not just copy UTMOS?
-
-Its own ablations show its famous multi-level stacking barely helped (+0.006 correlation). What helped was rater/domain information, staged training, and modern training data. We keep those, and add what UTMOS lacks: attention to where the language changes, and supervision that doesn't depend on thousands of human ratings.
-
-## Deliverables
-
-- SwitchMOS model + code, released.
-- A small human-rated set of switch clips, released.
-- A paper (target: Interspeech).
-- Optional case study: IndicF5 fine-tuned on real Hinglish, scored by SwitchMOS.
+Its own ablations show its multi-level stacking barely helped (+0.006). What mattered was listener and domain information, staged training, and matching training data. Later work adds pairwise objectives and spectrogram fusion. We build on those, add the local-event branch, and train on far more modern and multilingual data than UTMOS had.

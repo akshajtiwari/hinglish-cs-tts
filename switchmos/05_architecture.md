@@ -1,46 +1,44 @@
-# 05 — Architecture
+# 05 — Architecture (v1)
 
-**Recommended design: a gated set of experts (SwitchMoE), whose switch expert is trained on minimal pairs (SwitchEdit) and receives a label-free switch-likelihood signal (SwitchLM).**
+Built from what published ablations show matters (see `14_sota_and_datasets.md` §14.3), plus one new component.
 
-## 5.1 Shared backbone
+```
+audio (+ transcript, language pair, dataset id, rater id)
+ ├─ Semantic branch   multilingual SSL encoder (w2v-BERT 2.0 / mHuBERT-147 / XLS-R; pilot)
+ │                    learned layer weights → frame features → attention pooling
+ ├─ Acoustic branch   mel-spectrogram CNN (EfficientNet-B0 class) → pooled features
+ ├─ Local-event branch (new)
+ │     MMS + uroman alignment → language switches (later: names, numbers, chunk joins)
+ │     per event: SSL window features + switch features (04) + SwitchLM surprisal
+ │     attention + soft-min over events; learned "no events" vector if none
+ ├─ Conditioning      dataset/domain embedding (+ per-dataset score bias), rater embedding
+ │                    (averaged at inference), language-pair embedding
+ └─ Heads
+       absolute MOS            clipped MSE, per-dataset bias
+       pairwise preference     Bradley–Terry + Davidson ties; strength-aware for A+1 / A+2 labels
+       6 SpeechArenaBench axes auxiliary
+       per-event scores        explanation output
+```
 
-- **Multilingual self-supervised speech encoder** (mHuBERT-147 or XLS-R; WavLM is English-centric). Mostly frozen; features precomputed to save A16 time.
-- **Learned layer weights** over encoder layers (the largest single effect in DAMOS's ablations).
-- **Alignment and switch detection** from 04.
+## Why each part
 
-## 5.2 Experts
+| Part | Why |
+|---|---|
+| Multilingual SSL encoder | English-trained encoders (WavLM) transfer poorly; SSL models generalize across languages better than codecs |
+| Learned layer weights | Early layers carry synthesis quality, later layers intelligibility; biggest single ablation effect in DAMOS |
+| Spectrogram branch | UTMOSv2: spectrogram best for absolute score, SSL best for ranking, fusion beats both |
+| Local-event branch | Whole-clip pooling averages away brief problems; switches are where code-switched TTS fails |
+| Dataset / domain bias | Different datasets use different scales (MOS, MUSHRA, pairwise); lets them train together |
+| Rater embedding | Largest single effect in UTMOS |
+| Bradley–Terry + ties | Beats regression on preference data; ties used, not discarded |
+| Soft-min over events | One bad moment lowers perceived naturalness more than an average suggests |
 
-| Expert | Looks at | Inputs | Output |
-|---|---|---|---|
-| **Global** | Whole clip | Encoder frames → frame scores → late pooling | Clip-level naturalness |
-| **Switch** | ±0.5–1 s window around each switch, encoded separately (so a defect elsewhere doesn't leak in) | Window embeddings + switch features (04) + SwitchLM surprisal | Score per switch |
-| **Artefact** (optional) | Spectrogram | Small CNN (EfficientNet-B0), as in UTMOSv2 | Glitch / noise evidence |
+## Size and compute
 
-## 5.3 Gate and combination
+Encoder ~300–600M (mostly frozen, top layers fine-tuned) + a few million new parameters. Fits 16 GB A16s with cached features. 10–25× smaller than SpeechJudge's 7B.
 
-- A small gate decides how much each expert counts, conditioned on: number and density of switches, language pair, and a domain embedding.
-- Clip score = gated mix of experts, **plus a soft-minimum over switch scores**, so one bad switch can pull the score down, as it does for listeners.
-- Clips with no switches rely on the global and artefact experts.
+## Later options (only if v1 leaves headroom)
 
-## 5.4 Conditioning embeddings (UTMOS's most effective idea)
-
-- **Rater** embedding during training (averaged at inference).
-- **Language pair** embedding (what "natural" means can differ by pair).
-- **Domain** embedding (dataset / system family).
-
-## 5.5 SwitchLM (label-free feature)
-
-- A small Transformer (20–50M) over word-level prosody tokens (pitch statistics, duration, energy, pause, pooled accent features), conditioned on words, language tags, and left context.
-- Trained only on natural code-switched speech (03 §3.3).
-- Its **surprisal** at each switch (how unexpected the switch sounds) is a feature for the switch expert.
-- Not a standalone metric: the closest published analogue (TTScore-pro) correlates with humans at only ~0.05.
-
-## 5.6 Heads
-
-- Clip score (main output).
-- Per-switch score.
-- Auxiliary: the 6 SpeechArenaBench axes; per-switch control class (natural / spliced / under / over).
-
-## 5.7 Size
-
-Encoder ~95–300M (mostly frozen) + a few million trainable parameters in experts, gate, and heads. 25–100× smaller than SpeechJudge.
+- kNN retrieval head (VoiceMOS 2024 winner).
+- Distillation: pseudo-label unlabelled modern TTS audio with SpeechJudge-GRM.
+- Small audio-LLM judge as a comparison point.
