@@ -165,7 +165,7 @@ Fixed in advance (§10): beat UTMOSv2 on modern, Indian-language, and mixed-lang
 - **Research-only licence.** Several key datasets forbid commercial use, so the released judge is for research. This allows the strongest data mix.
 - **Common format.** Every item is stored as recording, system, listener, dataset, and label type, so absolute scores and comparisons can train together.
 - **Hold out whole voices, languages, listeners, and sentences** for testing, so results show real generalization, not memorization.
-- **Check the commercial voices' terms of service.** SpeechArenaBench recordings come from company products whose terms may limit training use.
+- **Resolve the commercial voices' terms of service first (blocker).** SpeechArenaBench recordings come from company products; several vendors (e.g. Sarvam, ElevenLabs) forbid using their outputs to train or even test machine-learning systems. We will ask the dataset's authors, get a legal read, and if needed train on open-model data (SpeechJudge, MANGO, our own ratings of open voices) and use SpeechArenaBench for testing only.
 
 ### Step 2 — Measure the current judges (1–2 weeks)
 Run UTMOS, UTMOSv2, DNSMOS, and SpeechJudge on every test set. **Why:** this gives the exact numbers to beat and shows *where* each fails before we build anything. **Gate:** reproduce UTMOS's published score on BVCC (≈0.897), proving our test setup is correct.
@@ -214,7 +214,7 @@ Run every test (§10). Release the judge, code, test splits, and ratings openly.
 
 **People:** one researcher; 5–8 paid bilingual listeners for about two weeks.
 
-**Timeline:** about 16–20 weeks part-time.
+**Timeline:** about 19 weeks to the Interspeech 2027 deadline (papers due Feb 9, 2027), with a pre-agreed cut-list if steps slip (`10_roadmap.md`).
 | Weeks | Steps |
 |---|---|
 | 1–2 | 1 (data) |
@@ -269,7 +269,7 @@ If the switch component doesn't raise the overall score, the main result (a bett
 | Only 7 commercial voices in SpeechArenaBench | Combine with SpeechJudge and MANGO voices; add our own test voices |
 | Judge can be "fooled" when used as a training reward | Explicit test; recommend combining with other measures |
 | Before/after pairs teach "was edited" | Same audio converter on both; non-switch edit controls; listening check |
-| Terms of service of commercial voices | Legal check before release; research-only licence |
+| Terms of service of commercial voices forbid training (or testing) on their outputs | Resolve before training (ask dataset authors, legal read); fall back to open-model training data and evaluation-only use |
 | Someone publishes first | Move quickly; our combination (multilingual mix + local component) stays distinct |
 
 ---
@@ -330,4 +330,4 @@ If the switch component doesn't raise the overall score, the main result (a bett
 - IndicMOS (Interspeech 2024); SpeechArenaBench / Preferences of a Voice-First Nation (2604.21481); MANGO (AI4Bharat).
 - DAMOS (2608.21176); frame-level quality prediction (2508.10374).
 - HiACC (Data in Brief 2025); MMS (2305.13516); Rao et al. 2018; Fricke et al. 2016; Olson 2016.
-- Full survey tables: `14_sota_and_datasets.md`.
+- Full survey tables: `02_related_work_and_novelty.md` and `03_datasets.md`; pre-implementation checklist: `12_pre_implementation_checklist.md`.

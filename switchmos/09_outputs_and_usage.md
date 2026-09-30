@@ -21,7 +21,7 @@ Audio (any sample rate) + transcript + language pair (e.g. `hi-en`). Word langua
 }
 ```
 
-- `switchmos`: whole-clip naturalness (higher = more human).
+- `switchmos`: **whole-clip naturalness, the headline output** (higher = more human).
 - `switches[].score`: per-switch naturalness.
 - `reason`: from the interpretable features (04).
 
@@ -29,7 +29,7 @@ Audio (any sample rate) + transcript + language pair (e.g. `hi-en`). Word langua
 
 | Use | How |
 |---|---|
-| Compare TTS systems | Same sentences and reference voice for all; report SwitchMOS with CER and speaker similarity |
+| Compare TTS systems | Same sentences and reference voice for all; report SwitchMOS (whole clip) with CER and speaker similarity; per-switch scores explain differences |
 | Debug a system | Look at which switches score low and why |
 | Pick a fine-tune checkpoint | Score each checkpoint on a fixed dev set |
 | Filter synthetic training data | Drop clips with low scores before using them to train ASR |

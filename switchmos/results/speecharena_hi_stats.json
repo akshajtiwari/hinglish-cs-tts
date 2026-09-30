@@ -1,0 +1,159 @@
+{
+  "lang": "hi",
+  "shards": 70,
+  "pairs_total": 16694,
+  "pairs_by_kind": {
+    "mixed": 4035,
+    "dev_only": 11281,
+    "latin_only": 1378
+  },
+  "unique_sentences": 9290,
+  "sentences_by_kind": {
+    "mixed": 2493,
+    "dev_only": 5884,
+    "latin_only": 913
+  },
+  "latin_words_per_mixed_sentence": {
+    "mean": 7.39,
+    "min": 1,
+    "max": 35
+  },
+  "raters_total": 242,
+  "raters_on_mixed": 198,
+  "system_appearances": {
+    "Bulbul V3 Beta": 4888,
+    "Speech 2.8 HD": 4751,
+    "Gemini 2.5 Pro TTS": 5267,
+    "GPT 4o Mini TTS": 5207,
+    "Indic F5": 3028,
+    "Sonic 3": 5163,
+    "Eleven Labs v3": 5084
+  },
+  "system_appearances_mixed": {
+    "Bulbul V3 Beta": 1261,
+    "Speech 2.8 HD": 1125,
+    "Sonic 3": 1277,
+    "GPT 4o Mini TTS": 1285,
+    "Indic F5": 738,
+    "Gemini 2.5 Pro TTS": 1309,
+    "Eleven Labs v3": 1075
+  },
+  "preference_values_top": [
+    [
+      "Gemini 2.5 Pro TTS",
+      2274
+    ],
+    [
+      "Eleven Labs v3",
+      1846
+    ],
+    [
+      "Sonic 3",
+      1619
+    ],
+    [
+      "Bulbul V3 Beta",
+      1495
+    ],
+    [
+      "Speech 2.8 HD",
+      1437
+    ],
+    [
+      "GPT 4o Mini TTS",
+      1376
+    ],
+    [
+      "Tie / No Preference",
+      677
+    ],
+    [
+      "Indic F5",
+      462
+    ],
+    [
+      "Gemini 2.5 Pro TTS, Eleven Labs v3",
+      403
+    ],
+    [
+      "Gemini 2.5 Pro TTS, Sonic 3",
+      381
+    ]
+  ],
+  "fine_grained_eval_examples": [
+    {
+      "additional_comment": "B ઓડિયો વધારે સારો સંભળાય છે",
+      "detailed_ratings_a": {
+        "noise": 5,
+        "liveliness": 1,
+        "voice_quality": 1,
+        "expressiveness": 1,
+        "hallucinations": 5,
+        "intelligibility": 5
+      },
+      "detailed_ratings_b": {
+        "noise": 5,
+        "liveliness": 5,
+        "voice_quality": 5,
+        "expressiveness": 5,
+        "hallucinations": 5,
+        "intelligibility": 5
+      }
+    },
+    {
+      "additional_comment": "A ઓડિયો સારો છે",
+      "detailed_ratings_a": {
+        "noise": 5,
+        "liveliness": 5,
+        "voice_quality": 5,
+        "expressiveness": 5,
+        "hallucinations": 5,
+        "intelligibility": 5
+      },
+      "detailed_ratings_b": {
+        "noise": 5,
+        "liveliness": 1,
+        "voice_quality": 1,
+        "expressiveness": 1,
+        "hallucinations": 5,
+        "intelligibility": 5
+      }
+    },
+    {
+      "additional_comment": "B ઓડિયો",
+      "detailed_ratings_a": {
+        "noise": 5,
+        "liveliness": 1,
+        "voice_quality": 1,
+        "expressiveness": 1,
+        "hallucinations": 5,
+        "intelligibility": 5
+      },
+      "detailed_ratings_b": {
+        "noise": 5,
+        "liveliness": 5,
+        "voice_quality": 5,
+        "expressiveness": 5,
+        "hallucinations": 5,
+        "intelligibility": 5
+      }
+    }
+  ],
+  "mixed_sentence_samples": [
+    "पापा ने कहा कि नया laptop दिला देंगे, but on one condition कि मुझे exams में अच्छे marks लाने होंगे।",
+    "जब भी मैं गाँव जाता हूँ, I feel so connected to my roots, और शहर की भागदौड़ से दूर बहुत शांति मिलती है।",
+    "मैंने उसे बार-बार मना किया था, but he kept insisting on going there, और अब देखो मुसीबत में फंस गया।",
+    "Oh ये तो वहीं हाल है करे कोई भरे कोई, विकास के नाम पर जंगल को प्रकृति से छेड़ छाड़ किया किसी और ने और झेले हम",
+    "Goan Fish Curry में sourness के लिए Kokum या tamarind का use होता है और authentic coastal meal के लिए इसे boiled red rice (Ukda Rice) के साथ pair करना best रहता है।",
+    "Trump ने भारत के ख़िलाफ़ पहले २५% tariff लगाया था और बाद में पिछले साल अगस्त में रूसी तेल ख़रीदने के नाम पर और २५% tariff लगा दिया था",
+    "Rapido: Kamakhya Temple, Guwahati के लिए आपकी ride 4 minutes में आ रही है। Driver Ramesh (Toyota Etios) 1.2 km दूर हैं।",
+    "शादी के लिए ओवर रेडी मत हो जाना, थोड़ा cool जीजू के साथ vive match करते हुए dressup होना",
+    "कल रात की movie बहुत लंबी थी, and by the end of it, मैं पूरी तरह थक चुका था।",
+    "मैंने उसे समझाया कि गुस्सा करना useless है, but he was so frustrated कि उसने मेरी एक भी बात नहीं सुनी।",
+    "ऑफिस की meetings इतनी boring होती हैं, that I literally struggle to keep my eyes open, सच में।",
+    "त्यौहारों के समय घर की सफाई करना is such a headache, पर मम्मी के सामने किसी की चलती कहाँ है।",
+    "मैंने सोचा था कि weekend पर आराम करूँगा, but my cousins arrived unexpectedly और सारा plan चौपट हो गया।",
+    "खाने में नमक थोड़ा कम था, but overall the food was quite good, और मेहमानों ने भी तारीफ की।",
+    "Dell XPS 13 9310 update (Version 1.0) 23rd August 2024 को release होगा; अगर आपको BIOS compatibility issues आती हैं तो please support@dell.com पर contact करें।"
+  ]
+}

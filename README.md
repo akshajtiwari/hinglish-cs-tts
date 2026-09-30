@@ -1,13 +1,12 @@
-# Hinglish Code-Switched TTS
+# SwitchMOS
 
-Research project on Hindi-English code-switched text-to-speech, started 2026-09-23.
+A whole-clip naturalness predictor for synthetic speech that aims to beat UTMOS where it fails (modern, Indian-language, and code-switched speech), trained on a broad mix of existing human ratings, with a built-in branch that scores language switches.
 
-**Working title:** *Natural Switches Are Not Seamless: A Switch-Localized, Human-Calibrated Metric for Code-Switched TTS, with a Hinglish Case Study.*
+**All documentation is in [`switchmos/`](switchmos/README.md).** Start with its README; for the full non-specialist overview read `switchmos/00_committee_proposal.md`; before implementing, read `switchmos/12_pre_implementation_checklist.md`.
 
-**Start here: [`switchmos/`](switchmos/README.md)**, a self-contained description of the current project.
+| Folder | Contents |
+|---|---|
+| `switchmos/` | Research docs: problem, related work, datasets, architecture, training, evaluation, roadmap, checklist |
+| `model/` | IndicF5 toolkit: data prep, checkpoint converter, fine-tune script; used for before/after switch pairs and as an optional test voice |
 
-**Current direction (2026-09-30): SwitchMOS**, a whole-clip naturalness predictor that beats UTMOS where it fails (modern, Indian-language, and code-switched speech), trained on a broad mix of existing human ratings, with a built-in local-event branch that scores language switches. Spec: [`docs/sds_guide/13_switchmos.md`](docs/sds_guide/13_switchmos.md).
-
-**Original problem in one line:** Hinglish TTS gets the words right but sounds wrong at the exact moment it switches between Hindi and English, and nobody measures that moment. We build a score that checks whether a switch sounds like a real bilingual speaker, then use it to test what training on real Hinglish conversation fixes and what it costs.
-
-All research documents are in [`docs/`](docs/README.md).
+Earlier documents from previous project directions are recoverable at git tag `archive-pre-consolidation`.

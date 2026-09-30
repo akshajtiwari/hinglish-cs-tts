@@ -1,8 +1,51 @@
-# 02 — Fine-tuning recipe v1 (IndicF5 → Hinglish on 4×A16)
+# 15 — Infrastructure and the IndicF5 toolkit
 
-Verified 2026-09-28 against `SWivid/F5-TTS` main (`2832525`, v1.1.22), the IndicF5 GitHub/HF repos, the NVIDIA A16 product brief, and three public IndicF5 fine-tunes (Orato, Saravananravi, ehzawad). Items marked ⚠ are extrapolated.
+## 15.1 GPU server
 
-## 2.1 Hardware reality: NVIDIA A16
+| Item | Value |
+|---|---|
+| Access | `ssh gaurav@100.80.142.96` (key-based) |
+| Machine | Ubuntu 22.04 VM, 32 vCPU (Xeon Gold 6430), 480 GB RAM, 4.6 TB free disk |
+| GPUs | 4× NVIDIA A16, 16 GB each (14.6 GiB usable), Ampere sm_86, bf16 supported; not pooled; PCIe only, no NVLink |
+| Speed | Each A16 ≈ 1/6 of an RTX 3090 (FP16 tensor 17.9 TFLOPS, 200 GB/s); all four ≈ half a 3090 |
+| Driver | 580.x, CUDA 13.0 |
+| Shared with | Other users (an `aws_ml` project; GPU stress tests have run) — check `nvidia-smi` before jobs |
+
+## 15.2 Environment on the server
+
+- Project folder: `~/projects/hinglish-cs-tts/` (a clone of this repo).
+- Python: pyenv 2.8.6, Python 3.11.16 pinned via `.python-version`.
+- venv: `hinglishtts/` with torch 2.8.0 + CUDA 12.8, F5-TTS pinned at commit `283252563dbf91be625e0c27926acfaac449186c` (v1.1.22, editable install), tensorboard, huggingface_hub, safetensors.
+- System packages: git, tmux, ffmpeg, pyenv build deps.
+- Data on server: `data/Corpus/` (HiACC, checksum verified); `checkpoints/indicf5/` (gated IndicF5 `model.safetensors`, `vocab.txt`, `config.json`, `model.py`; layout verified).
+- Hugging Face token stored at `~/.cache/huggingface/token` (mode 600) on laptop and server. **Rotate it** (it was pasted in chat); see `12_pre_implementation_checklist.md` G1.
+- Rule agreed with the owner: **stop and ask before running anything on the server**; the owner reviews training code before any training run.
+
+## 15.3 Planned additions for SwitchMOS
+
+- A second env or extras for baselines (UTMOSv2, distillmos, scoreq, SHEET) and for SpeechJudge-GRM (`transformers==4.52.3`, bitsandbytes 4-bit).
+- Directories: `datasets/` (raw), `cache/` (encoder features), `runs/` (checkpoints, logs).
+- Code package `src/switchmos/` (see checklist C7).
+
+## 15.4 Role of the `model/` toolkit
+
+`model/` holds IndicF5 scripts. In the SwitchMOS plan they serve two purposes:
+1. **Minimal pairs:** IndicF5 regenerates only a switch region (F5 infilling) to build before/after pairs.
+2. **Extra test voice (optional):** IndicF5 fine-tuned on HiACC FT speakers, as a modern Hinglish system not in any rating dataset.
+
+| Script | Purpose |
+|---|---|
+| `model/scripts/00_inspect_hiacc.py` | Corpus layout and stats (stdlib) |
+| `model/scripts/01_prepare_hiacc.py` | 16→24 kHz, filtering, speaker-role split (`--split-file`), optional clip merging, F5 CSVs |
+| `model/scripts/02_convert_indicf5_ckpt.py` | IndicF5 `model.safetensors` → F5 trainer-loadable checkpoint |
+| `model/scripts/03_train.sh` | F5 fine-tune on 4×A16 (not yet run) |
+| `model/scripts/server_setup.sh` | Server environment setup |
+| `model/scripts/10_count_speecharena_codemix.py` | Count code-mixed pairs per SpeechArenaBench language (text columns only) |
+| `model/configs/*` | Speaker split, accelerate config, IndicF5 vocab |
+
+## 15.5 IndicF5 fine-tuning recipe (verified 2026-09-28; optional test voice)
+
+### 15.5.1 Hardware reality: NVIDIA A16
 
 | Fact | Value | Consequence |
 |---|---|---|
@@ -14,7 +57,7 @@ Verified 2026-09-28 against `SWivid/F5-TTS` main (`2832525`, v1.1.22), the Indic
 
 Net: **4×A16 ≈ half a 3090.** Fine. Use mixed precision; fp32 would be 3–4× slower.
 
-## 2.2 Facts about the training stack that shape the recipe
+### 15.5.2 Facts about the training stack that shape the recipe
 
 - `finetune_cli.py` args (verbatim defaults): `--exp_name F5TTS_v1_Base` (choices `F5TTS_v1_Base|F5TTS_Base|E2TTS_Base`), `--learning_rate 1e-5`, `--batch_size_per_gpu 3200`, `--batch_size_type frame`, `--max_samples 64`, `--grad_accumulation_steps 1`, `--max_grad_norm 1.0`, `--epochs 100`, `--num_warmup_updates 20000`, `--save_per_updates 50000`, `--keep_last_n_checkpoints -1`, `--last_per_updates 5000`, `--finetune`, `--pretrain PATH`, `--tokenizer pinyin|char|custom`, `--tokenizer_path`, `--log_samples`, `--logger wandb|tensorboard`, `--bnb_optimizer`.
 - **IndicF5 = `F5TTS_Base` (v0 arch)**: DiT dim 1024, depth 22, heads 16, ff_mult 2, text_dim 512, conv_layers 4, `text_mask_padding=False`, `pe_attn_head=1`. Vocab 2545 entries, embedding `[2546, 512]`. Use `--exp_name F5TTS_Base`, **not** v1.
@@ -27,19 +70,19 @@ Net: **4×A16 ≈ half a 3090.** Fine. Use mixed precision; fp32 would be 3–4�
 - Warmup: `--num_warmup_updates N` is multiplied by num_processes internally; pass the real number.
 - Checkpoints: `ckpts/<dataset_name>/model_last.pt` every `last_per_updates`; `model_<n>.pt` every `save_per_updates`.
 
-## 2.3 NaN / precision evidence
+### 15.5.3 NaN / precision evidence
 
 - Maintainer (issue #832): very short clips give "poisonous loss values under bf16"; "we always train with fp16"; filter dirty pairs and clips <3 s with ASR.
 - Orato (IndicF5, 194 h): bf16 NaN'd mid-run → fp32. ehzawad (IndicF5, 16 h): bf16 autocast stable for 2.5k updates. #867: bf16 fine for 195k steps on v1.
 - **HiACC risk:** median clip 3.0 s; 40% of clips are under 3 s. Mitigation ladder: (1) `--min-sec 1.0`, fp16; (2) merge consecutive same-speaker segments to ≥4 s (`--merge-to-sec 4` in the prep script, train split only); (3) fp32 fallback.
 
-## 2.4 VRAM
+### 15.5.4 VRAM
 
 - ehzawad measured **6.1 GiB peak at 8,192 frames/GPU** with bf16 autocast + 8-bit Adam on IndicF5. fp32 AdamW adds ~2 GB → ~8 GiB.
 - Gradio heuristic for 16 GB: 5,632 frames (conservative).
 - **Start at 8,192 frames, `--max_samples 32`.** Raise to 12,800 if peak < 11 GiB. Add `--bnb_optimizer` if a rank OOMs.
 
-## 2.5 Hyperparameters v1
+### 15.5.5 Hyperparameters v1
 
 | Knob | Value | Why |
 |---|---|---|
@@ -55,12 +98,12 @@ Net: **4×A16 ≈ half a 3090.** Fine. Use mixed precision; fp32 would be 3–4�
 | save | every 250 updates, keep last 5, `model_last` every 50 | evaluate every 250 |
 | EMA | on (automatic); evaluate raw first | see 2.2 |
 | max_grad_norm | 1.0 | default |
-| data | HiACC adult train, mixed clips ×2, ≥1.0 s | see 01 |
+| data | HiACC **FT speakers** (speaker-disjoint split), mixed clips ×2, ≥1.0 s | see `03_datasets.md` §3.5 |
 | logger | tensorboard | no wandb account needed |
 
 Wall-clock ⚠: ehzawad got ~6,100 frames/s on one RTX A5000. A16 per GPU ≈ 1/6 → ~1,000–1,500 frames/s; 4 GPUs minus PCIe overhead ≈ 3,000–4,500 frames/s. 2.2 h data ≈ 950 k frames/epoch → **4–6 min/epoch → 60 epochs ≈ 4–6 h** in fp16. fp32 ≈ 15–24 h.
 
-## 2.6 Planned ablations (after v1 runs clean)
+### 15.5.6 Planned ablations (after v1 runs clean)
 
 1. Clean-Hindi mixing (1–2 h IndicVoices-R Hindi, gated CC BY) at 1:1 — protects base quality, adds wideband audio.
 2. Mixed-only vs all-adult clips.
@@ -69,18 +112,18 @@ Wall-clock ⚠: ehzawad got ~6,100 frames/s on one RTX A5000. A16 per GPU ≈ 1/
 5. LoRA (instavar fork, r=16, `to_q to_k to_v to_out.0 ff.ff.0.0 ff.ff.2`, lr 1e-4) vs full — cheaper, unbenchmarked.
 6. Adult + children.
 
-## 2.7 Alternatives considered and rejected for this box
+### 15.5.7 Alternatives considered and rejected for this box
 
 - **Indic Parler-TTS 0.9B**: full AdamW needs ~14.4 GB per replica before activations; no 16 GB recipe; LoRA PR closed. Not practical.
 - **Orpheus 3B Hindi**: LoRA fits one 16 GB GPU via Unsloth (T4 notebook), but single-GPU only, autoregressive and slow on A16, no Hinglish eval. Keep as a possible second baseline.
 - **Duration predictor** (EraX fork `--use_duration_predictor`): reported buggy (EraX #16); upstream has only a stub. Not for v1.
 
-## 2.8 Environment
+### 15.5.8 Environment
 
 - Upstream F5-TTS: `torch>=2.0`, `accelerate>=0.33`, `bitsandbytes`, `ema_pytorch`, `x_transformers`, `vocos`, `torchdiffeq`, `torchcodec` (needs ffmpeg libs), `gradio`, `hydra-core`. README example: Python 3.11, `torch==2.8.0+cu128`. Driver on server is 580 (CUDA 13.0) → cu128 wheels fine.
 - Use **upstream** F5-TTS for training with `--exp_name F5TTS_Base`; the IndicF5 fork is a pre-v1 snapshot with hardcoded paths and a commented-out checkpoint loader. Use its `model.py` only for inference-parity checks.
 - IndicXlit (for later eval/transliteration) needs fairseq → Python ≤3.10 or `fairseq-fixed` on 3.11. Separate venv when needed.
 
-## 2.9 Sources
+### 15.5.9 Sources
 
 F5-TTS files: `src/f5_tts/train/finetune_cli.py`, `train/README.md`, `train/datasets/prepare_csv_wavs.py`, `configs/F5TTS_Base.yaml`, `model/trainer.py`, `model/dataset.py`, `model/cfm.py`, `train/finetune_gradio.py`; issues #832, #790, #57, #769, #39, #993; instavar/f5-tts-lora-finetuning. IndicF5: HF card + API, GitHub fork, arXiv 2505.20693 §training. Fine-tunes: tryorato/orato-tts-hindi-v1, Saravananravi/indicf5-hinglish + saravananravi08/indicf5-finetune, ehzawad/indicf5-bangla-tts. A16: NVIDIA PB-10518-001_v02, Lenovo LP1815.

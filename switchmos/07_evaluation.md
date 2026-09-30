@@ -6,8 +6,8 @@ Every test uses data not seen in training. Pass bars are fixed before any result
 
 | Group | Sets | Metrics | Why |
 |---|---|---|---|
-| **Modern pairwise** (headline) | SpeechJudge-Eval; MOS-RMBench; a clean commercial TTS set (TTS-HP protocol) | Pairwise accuracy, with human ceiling and longest-clip heuristic; small-difference pairs reported separately | Where UTMOS/UTMOSv2 are near chance |
-| **Indic** (headline) | SpeechArenaBench held-out systems and held-out languages; MANGO held-out systems | Pairwise accuracy; system-ranking Kendall τ; MUSHRA SRCC | Where off-the-shelf predictors fail |
+| **Modern pairwise** (headline) | SpeechJudge-Eval (available, CC-BY-NC); MOS-RMBench (**not released**; rebuild pairs from BVCC/SOMOS or drop); TTS-HP (`datapointai/tts-human-preferences-large`, gated; vendor ToS caveat) | Pairwise accuracy, with human ceiling and longest-clip heuristic; small-difference pairs reported separately | Where UTMOS/UTMOSv2 are near chance |
+| **Indic** (headline) | SpeechArenaBench held-out systems and held-out languages (subject to the vendor-ToS decision, `03_datasets.md` §3.6); MANGO held-out systems | Pairwise accuracy; system-ranking Kendall τ; MUSHRA SRCC | Where off-the-shelf predictors fail |
 | **Code-switched** (headline) | SpeechArenaBench code-mixed vs monolingual subsets; SpeechJudge mixed slice | Pairwise accuracy per subset | The specific gap we target |
 | **Classic** (no-harm) | BVCC utt/sys; SOMOS; VMC'23 tracks; VMC'24 T1 zoomed; BC2019 Mandarin | SRCC, LCC, MSE | Must stay competitive with UTMOS/UTMOSv2 |
 | **Local events** | Held-out edited pairs with known locations; our human switch study (08) | Localization AUC; correlation with human switch ratings | Per-event scores mean something |
@@ -16,7 +16,7 @@ Every test uses data not seen in training. Pass bars are fixed before any result
 
 ## 7.2 Baselines
 
-UTMOS · UTMOSv2 · DNSMOS · APG-MOS / DistilMOS (if checkpoints exist) · SpeechJudge-GRM (4-bit, 7B) · longest-clip heuristic · **our model without the local-event branch** · our model trained on UTMOS's data only (to separate data from architecture).
+UTMOS (`tarepan/SpeechMOS` utmos22_strong) · UTMOSv2 (pip) · Distill-MOS (pip) · SCOREQ (pip) · APG-MOS (released checkpoint) · SHEET (torch.hub) · DNSMOS · SpeechJudge-GRM (11B total, 4-bit on 16 GB untested). DistilMOS and SAMOS have no public checkpoints. · longest-clip heuristic · **our model without the local-event branch** · our model trained on UTMOS's data only (to separate data from architecture).
 
 ## 7.3 Pre-registered success criteria
 

@@ -1,16 +1,35 @@
-# 09 — What to Study to Get This Going
+# 14 — Study plan
 
-Scope: the topic areas you need, the depth you need them at, and where to learn each. Not a syllabus of every detail. Depth levels: **Know** = can explain it and read papers that use it; **Do** = can run the tool and debug it; **Own** = can design and defend it in the paper.
+What to learn to work on SwitchMOS, in order, with depth levels (**Know** = explain it; **Do** = run and debug it; **Own** = design and defend it) and verified video links (checked 2026-09-24).
 
-Every block has a **Watch** list of video lectures. Each link was opened and its title verified on 2026-09-24. Where no good video exists, the block says so rather than padding; those topics must be read.
+## Priority topics for SwitchMOS
 
-Time estimate: 4–6 weeks part-time, interleaved with phases 0–1 of the plan. Do not finish studying before starting; each block ends with a hands-on checkpoint that is also a project task.
+| # | Topic | Why | Depth | Start with | Covered in block |
+|---|---|---|---|---|---|
+| 1 | **MOS prediction** | The field we extend | **Own** | UTMOS (2204.02152) and UTMOSv2 (2409.09305) ablations; VoiceMOS 2023/2024/2026 papers | new |
+| 2 | **Preference learning** | Main training signal | **Own** | Bradley–Terry basics; MOS-RMBench (2510.00743); SpeechJudge (2511.07931) | new |
+| 3 | Self-supervised speech encoders | Backbone | Know | wav2vec 2.0, HuBERT papers; mHuBERT-147 / w2v-BERT 2.0 cards | new |
+| 4 | Evaluation statistics | Proving it works | Own | Block 6 below | 6 |
+| 5 | Speech signals | Switch features | Do | Block 1 | 1 |
+| 6 | Forced alignment | Finding switches | Do | Block 3 | 3 |
+| 7 | Code-switching phonetics | Why switches are marked | Know | Block 2 | 2 |
+| 8 | Speech-editing TTS (F5 infilling) | Minimal pairs | Do | Block 4; F5 `speech_edit.py`; Voicebox paper | 4 |
+| 9 | Localized quality | Local branch | Know | DAMOS (2608.21176); frame-level MOS (2508.10374) | new |
+| 10 | Label-free quality | SwitchLM | Know | SpeechLMScore (2212.04559); TTScore (2509.20485); TTSDS2 (2506.19441) | new |
+| 11 | Active learning | Human study | Know | Miniconi et al., Interspeech 2025 | new |
+| 12 | PyTorch DDP, mixed precision | Training on 4×A16 | Do | Block 5; PyTorch DDP tutorial; HF Accelerate docs | 5 |
+| 13 | Research hygiene, licences | Data terms, release | Do | Block 9 | 9 |
+| 14 | Writing | Paper | Know | Block 10 | 10 |
 
----
+**Suggested order:** 1 → 2 → 4 → 3 → 5 → 6 → 8 → 9 → 12 → 7 → 10 → 11 → 13 → 14.
 
-## Block 1 — Speech signals and the features SDS uses
+**Checkpoint per topic:** score a clip with UTMOS; fit Bradley–Terry on 100 SpeechArenaBench pairs; align a HiACC clip; edit one word with F5 and listen.
 
-**Why:** every term in SDS (F0, energy, rate, spectral distance) is a signal-processing quantity. You need to compute them, plot them, and know when they lie (octave errors, unvoiced frames, noise).
+The blocks below give details, resources, and videos. They were written when the project focused on a switch-only metric (then called "SDS"); read "SDS" as "the switch features of the local branch".
+
+## Block 1 — Speech signals and the switch features
+
+**Why:** every switch feature (F0, energy, rate, spectral distance) is a signal-processing quantity. You need to compute them, plot them, and know when they lie (octave errors, unvoiced frames, noise).
 
 **Depth:** Do.
 
@@ -76,7 +95,7 @@ Time estimate: 4–6 weeks part-time, interleaved with phases 0–1 of the plan.
 
 ## Block 3 — Forced alignment
 
-**Why:** SDS needs word boundaries at ~20 ms precision. HiACC has none. Alignment error is the single biggest technical risk to the metric.
+**Why:** switch features need word boundaries at ~20 ms precision. HiACC has none. Alignment error is the single biggest technical risk to the metric.
 
 **Depth:** Do (Know the theory).
 
@@ -247,7 +266,7 @@ Time estimate: 4–6 weeks part-time, interleaved with phases 0–1 of the plan.
 
 ## Block 8 — Reading the code-switched TTS literature critically
 
-**Why:** the related-work section must position SDS against three 2026 papers and the join-cost tradition without overclaiming.
+**Why:** the related-work section must position SwitchMOS against SpeechJudge, UTMOS/UTMOSv2, the 2026 local-evaluation papers, and the join-cost tradition without overclaiming.
 
 **Depth:** Know (Own for the four starred).
 
@@ -263,13 +282,13 @@ Time estimate: 4–6 weeks part-time, interleaved with phases 0–1 of the plan.
 - Bamgbose et al. 2026, *Beyond Naturalness* — https://arxiv.org/abs/2608.09930
 
 **Watch**
-- *Target cost and join cost* — Simon King, speech.zone Speech Synthesis module 2, ~12 min, free — https://speech.zone/courses/speech-synthesis/module-2-unit-selection/videos/target-cost-and-join-cost/ . Directly explains the join-cost idea SDS descends from; the rest of module 2 (6 videos) is worth it: https://speech.zone/courses/speech-synthesis/module-2-unit-selection/ .
+- *Target cost and join cost* — Simon King, speech.zone Speech Synthesis module 2, ~12 min, free — https://speech.zone/courses/speech-synthesis/module-2-unit-selection/videos/target-cost-and-join-cost/ . Directly explains the join-cost idea the switch features descend from; the rest of module 2 (6 videos) is worth it: https://speech.zone/courses/speech-synthesis/module-2-unit-selection/ .
 - *Building speech synthesis systems for Indian languages* — Hema Murthy (IIT Madras), 2017 — https://www.youtube.com/watch?v=QpkZ3y_NPfc . Background for Thomas et al. 2018: common label set, syllable units, HTS pipeline.
 - *Speech Synthesis* — Kim Silverman (Apple), ICSI Berkeley 2012 — https://www.youtube.com/watch?v=zBozX97IxFk . Industry overview of unit selection, text normalization, prosody.
 - *Using Speech Synthesis to give Everyone their own Voice* — Simon King public lecture — https://www.youtube.com/watch?v=xzL-pxcpo-E . Unit selection vs parametric, with demos.
 - Gap: no recordings of the 2026 CS-TTS papers (LCG, MagpieTTS-LF, Yeo et al.), of Thomas et al. 2018, or of Murthy's SSW 2025 keynote. Read them.
 
-**Checkpoint:** a one-paragraph "how SDS differs" note for each starred paper. These paragraphs go straight into related work.
+**Checkpoint:** a one-paragraph "how SwitchMOS differs" note for each starred paper. These paragraphs go straight into related work.
 
 ---
 
@@ -301,7 +320,7 @@ Time estimate: 4–6 weeks part-time, interleaved with phases 0–1 of the plan.
 
 ---
 
-## Block 10 — Writing a metric paper
+## Block 10 — Writing a predictor paper
 
 **Why:** metric papers are judged on validation, not on the model.
 
@@ -326,16 +345,15 @@ Time estimate: 4–6 weeks part-time, interleaved with phases 0–1 of the plan.
 
 ---
 
-## Suggested order
+## Block schedule against the roadmap
 
-| Weeks | Blocks | Runs alongside plan phase |
+| Roadmap weeks | Study | Roadmap phase |
 |---|---|---|
-| 1 | 1, 9 | 0 (setup, license email, gated access) |
-| 2 | 3, 2 | 1 (alignment pilot) |
-| 3 | 2, 6 | 2 (natural switch signature) |
-| 4 | 4, 7 | 3 (baselines) |
-| 5 | 6, 8 | 4 (SDS pilot) |
-| 6 | 5, 10 | 5 (fine-tune) |
+| 0–2 | Topics 1, 2 (MOS prediction, preference learning); Block 9 | Blockers, data |
+| 3–4 | Block 6 (statistics); topic 3 (encoders) | Baselines |
+| 5–8 | Blocks 1, 3, 4; topics 9, 10 | Global model, local branch |
+| 9–11 | Block 2; topic 11 (active learning) | Human study |
+| 12+ | Block 10 (writing) | Evaluation, paper |
 
 ## What you can skip
 

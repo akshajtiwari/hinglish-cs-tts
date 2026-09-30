@@ -1,4 +1,4 @@
-# 12 — Glossary
+# 16 — Glossary
 
 | Term | Plain meaning |
 |---|---|
@@ -40,3 +40,26 @@
 | **AUC** | How well a score separates two classes (0.5 chance, 1 perfect) |
 | **Spearman / Kendall** | Rank correlations |
 | **16 kHz / 8 kHz** | Sampling rate / cutoff frequency; HiACC is 16 kHz, so everything is matched to it |
+| **Switch point** | The boundary between two adjacent words in different languages |
+| **Borrowing / loanword** | A foreign word used as part of the other language ("office" in Hindi) |
+| **MMS** | Meta's Massively Multilingual Speech model; its alignment head handles 1,100+ languages |
+| **uroman** | Converts any script to Latin letters so MMS can align it |
+| **RMS / dB** | Loudness |
+| **MFCC** | A compact description of the spectrum (voice colour) per frame |
+| **Mel-cepstral distance (MCD)** | Distance between two MFCC vectors; big jump = possible seam |
+| **Under-marked / over-marked** | Too little / too much of the human switch signature |
+| **Join cost** | The 1990s unit-selection measure of discontinuity at joins; our main competitor |
+| **MUSHRA** | Listening test scoring several versions 0–100 against a hidden reference and a bad anchor |
+| **CMOS** | Comparative MOS: how much better B is than A, −3 to +3 |
+| **Matrix / embedded language** | The main language of a sentence / the language inserted into it |
+| **Prosody** | Rhythm, pitch, loudness, and timing of speech |
+| **Hyper-articulation** | Saying a word more carefully: longer, higher pitch |
+| **Contrast (switch features)** | A switch's feature minus the same feature at the clip's ordinary boundaries |
+| **Local event** | A brief moment that can sound wrong: a switch, a join, a name, a number |
+| **Local-event branch** | The part of SwitchMOS that scores local events |
+| **Dataset / rater embedding** | Learned tags telling the model which dataset or listener a label came from |
+| **Stacking / ensembling** | Combining several models' predictions; small gains in UTMOS |
+| **Pre-registration** | Writing tests and pass bars down before seeing results |
+| **Steiger's test** | Tests whether one correlation with the same human ratings beats another |
+| **Vendor terms of service (ToS)** | Rules from TTS companies on how their generated audio may be used |
+| **Cut-list** | Pre-agreed features to drop, in order, if the schedule slips |

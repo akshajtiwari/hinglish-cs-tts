@@ -1,39 +1,48 @@
-# 11 — Open decisions and risks
+# 11 — Decisions and risks
 
-## Decisions
+## Decided
 
-| # | Question | Recommendation | When |
+| # | Decision | Date |
+|---|---|---|
+| D1 | Working name **SwitchMOS** (no collision found in web search; GitHub/PyPI to check) | 2026-09-29 |
+| D2 | **Headline:** a whole-clip naturalness predictor that beats UTMOS/UTMOSv2 on modern, Indic, and code-switched speech; classic benchmarks as no-harm checks | 2026-09-30 |
+| D3 | Switch scoring is a **built-in local-event branch**: key ablation and secondary output, not the headline | 2026-09-30 |
+| D4 | **Research-only licence** for the released model (allows SOMOS, BVCC, SpeechJudge, Blizzard) | 2026-09-30 |
+| D5 | HiACC used with **our speaker-disjoint split** (FT 12 / REF 6 / TEST 6); shipped splits share all speakers | 2026-09-29 |
+| D6 | Old documents deleted; recoverable at git tag `archive-pre-consolidation` | 2026-09-30 |
+| D7 | `model/` kept as the IndicF5 editing and test-voice toolkit | 2026-09-30 |
+| D8 | Target venue **Interspeech 2027** (due Feb 9, 2027) | 2026-09-30 |
+
+## Open
+
+| # | Question | Recommendation | By |
 |---|---|---|---|
-| D1 | Name | "SwitchMOS" (working). Alternatives: CS-MOS, SNAP | Phase 0 |
-| D2 | Primary claim | **Decided 2026-09-30:** whole-clip predictor beats UTMOS/UTMOSv2 on modern, Indic, and code-switched speech, competitive on classic benchmarks. Switch branch = key ablation and secondary output | Done |
-| D2b | Licence | **Decided 2026-09-30:** research-only model; full data mix incl. SOMOS, BVCC, SpeechJudge, Blizzard | Done |
-| D3 | Loanwords ("office", "phone") | Count as switches, tag them, report with and without | Phase 0 |
-| D4 | Romanized all-Latin input | v1 requires mixed script or tags; word-level LID in v2 | Phase 0 |
-| D5 | Encoder | Pilot mHuBERT-147 vs XLS-R vs MMS-300M on dev pairs | Phase 4 |
-| D6 | Two-system preference labels | Read card/paper; treat as ties if they mean "both good" | Phase 1 |
-| D7 | Phrase-boundary rule | Pause ≥150 ms or punctuation; check on 50 hand labels | Phase 3 |
-| D8 | Edit types for minimal pairs | Infill regeneration, duration change, pitch reset, accent-mismatched re-render | Phase 2 |
-| D9 | Repo visibility | Public repo is indexed by search engines; consider private until submission | Now |
-| D10 | Ethics / rater pay | Consent form; fair pay; check institutional approval | Before Phase 8 |
+| O1 | **Can SpeechArenaBench / TTS-HP audio be used for training, or only testing, given vendor ToS?** | Ask AI4Bharat; legal read; meanwhile plan with open-model data (SpeechJudge, MANGO) and treat SAB as eval-first | Week 0 |
+| O2 | SpeechArenaBench licence: MIT (card) vs CC BY 4.0 (paper) | Ask AI4Bharat | Week 0 |
+| O3 | Meaning of multi-system `preference_model` labels | Confirm against "Both Good / Both Bad" | Week 1 |
+| O4 | Multilingual encoder | Pilot w2v-BERT 2.0 / mHuBERT-147 / XLS-R on dev pairs, weighted by A16 memory | Week 5 |
+| O5 | Feature caching strategy | Cache a layer subset or learned-weighted sum per stage (see checklist M2) | Week 5 |
+| O6 | Loanwords ("office", "phone") as switches | Count them, tag them, report with and without | Week 5 |
+| O7 | Fully romanized Hinglish | Out of scope for v1 | — |
+| O8 | Reward-hacking test scope | Best-of-N reranking with IndicF5 (cheap) instead of RL | Week 11 |
+| O9 | Repo visibility | Public and indexed; consider private until submission | Now |
+| O10 | Ethics approval and rater pay | Check institutional requirement early (lead time) | Week 2 |
 
 ## Risks
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
-| Model learns system identity, not quality (only 7 systems) | High | Held-out-system splits; add our own systems as tests |
-| Rating scales clash across datasets (MOS, MUSHRA, pairwise) | Medium | Dataset embeddings with per-dataset bias; staged training |
-| Commercial-API audio (SpeechArenaBench) under restrictive terms of service | Medium | Legal check before release; research-only licence |
+| **Vendor ToS forbid training on SpeechArenaBench audio** | High | O1; open-model training data; SAB for evaluation; own preference data from open TTS if needed |
+| **Deadline (19 weeks) too tight** | High | Cut-list in `10_roadmap.md`; parallel phases |
+| Model learns system identity (only 7 systems in SAB) | High | Held-out-system splits; add SpeechJudge and MANGO systems; our own test voices |
 | Win comes only from data, not design | Medium | Ablation: our model trained on UTMOS's data only |
-| Reward hacking when used as a TTS reward | Medium | Explicit reward-optimization test (07) |
-| Minimal-pair model learns "was edited", not "unnatural" | Medium | Same vocoder on both; non-switch edit controls; human check |
-| Edits don't sound worse | Medium | Human check in Phase 2; fall back to DSP controls |
-| IndicF5 can't edit regions / mishandles Latin | Medium | Test in Phase 2; alternatives: F5 base, VoiceCraft |
-| Switch-branch gains small (as DAMOS) | Medium | Whole-clip headline unaffected; switch branch reported as ablation and diagnostic |
-| Clip-length confound | Known | Duration-only baseline; length-matched analysis |
-| Competition on SpeechArenaBench | Rising | Move fast; public repo exposure (D9) |
-| A16 speed | Known | Precompute features; reduce sampling steps for editing |
-| Too few code-mixed pairs in some languages | Unknown | Phase 1 count; restrict leave-one-out to languages with enough |
-| Minimal pairs need natural code-switched audio, which exists openly only for Hindi and Bengali | Known | For the other 8 languages, build pairs from SpeechArenaBench's synthetic clips using only clearly-worse DSP edits (splice, pitch reset, wrong duration); infill edits stay natural-speech-only. The switch expert's transfer to unseen languages is then itself a result |
-| Plain fine-tuned encoder already handles code-mixed pairs well | Unknown | Phase 1.5 check before building minimal pairs |
-| Code-mixed sentences are longer/harder, confounding comparisons | Known | Length-matched comparisons; error-explanation analysis in Phase 1.5 |
-| License mixing (NC corpora) | Low | Keep NC data out of released model training, or release model as research-only |
+| Rating scales clash (MOS, MUSHRA, pairwise) | Medium | Dataset embeddings with per-dataset bias; staged training |
+| Local branch gains small (as DAMOS) | Medium | Whole-clip headline unaffected; branch reported as ablation and diagnostic |
+| Minimal-pair model learns "was edited" | Medium | Same vocoder on both; non-switch edit controls; listening check |
+| IndicF5 can't edit regions or mishandles Latin | Medium | Feasibility test early; DSP-only controls as fallback |
+| Reward hacking | Medium | Explicit test; recommend composite use |
+| Compute: A16 is slow; caching storage | Medium | Measure throughput in week 1; cache selectively |
+| Scoop (SpeechArenaBench public since April 2026; public repo) | Rising | Move fast; O9 |
+| Clip-length confound | Known | Longest-clip baseline; length-matched analysis |
+| MOS-RMBench unavailable | Known | Rebuild pairs or drop |
+| SOMOS has no rater IDs | Known | Rater embedding only where IDs exist; "unknown rater" token otherwise |

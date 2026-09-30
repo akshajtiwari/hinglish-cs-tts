@@ -1,6 +1,6 @@
 # 05 — Architecture (v1)
 
-Built from what published ablations show matters (see `14_sota_and_datasets.md` §14.3), plus one new component.
+Built from what published ablations show matters (see `02_related_work_and_novelty.md` §2.4), plus one new component.
 
 ```
 audio (+ transcript, language pair, dataset id, rater id)
@@ -42,3 +42,25 @@ Encoder ~300–600M (mostly frozen, top layers fine-tuned) + a few million new p
 - kNN retrieval head (VoiceMOS 2024 winner).
 - Distillation: pseudo-label unlabelled modern TTS audio with SpeechJudge-GRM.
 - Small audio-LLM judge as a comparison point.
+
+## What we took from UTMOS and UTMOSv2 (their own ablations)
+
+| Component | Effect | Taken? |
+|---|---|---|
+| Frame-level scores averaged to a clip score | Beat pooled training | Yes, but frame scores from a full-context encoder are not truly local (Kuhlmann 2025), so local scores come from switch-anchored windows |
+| Contrastive / ranking loss | Works even without regression | Yes, as Bradley–Terry |
+| Listener / domain embedding | Largest single effect in UTMOS | Yes |
+| Multi-stage training | Largest effect in UTMOSv2 | Yes |
+| Diverse modern training data | Crucial in both | Yes, and much broader |
+| Spectrogram branch | Best absolute score | Yes |
+| Multi-level stacking | +0.006 correlation | No |
+| Phoneme encoder | Hurt on large data | No |
+
+## Options considered for the local branch, and why this combination
+
+| Option | Idea | Verdict |
+|---|---|---|
+| Label-free switch model alone (SwitchLM) | Surprisal of a switch under a model of natural speech | Too weak alone (TTScore-pro evidence); kept as a feature |
+| Gated experts | Separate global / switch / artefact experts with a gate | Folded into the branch-and-fusion design |
+| Minimal pairs (SwitchEdit) | Regenerate only a switch; learn "original is better" | **Main supervision for the local branch**: no prior quality predictor uses it, and it gives exact locations for free |
+| Generic defect localizer (DAMOS-style) | Detect any distortion, gate it into the score | Gains were tiny; we anchor on linguistic events instead |

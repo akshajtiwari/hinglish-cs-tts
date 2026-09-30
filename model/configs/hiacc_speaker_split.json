@@ -1,7 +1,34 @@
 {
-  "_note": "Speaker-disjoint roles for HiACC adult. The shipped train/val/test splits contain all 24 speakers in every split, so they are not used. AD63 has audio but no speaker_info row; speaker_info lists AD65 (F, 35) with no audio; treated as the same female speaker. See docs/sds_guide/04_building_the_core.md §4.1.",
+  "_note": "Speaker-disjoint roles for HiACC adult. The shipped train/val/test splits contain all 24 speakers in every split, so they are not used. AD63 has audio but no speaker_info row; speaker_info lists AD65 (F, 35) with no audio; treated as the same female speaker. See switchmos/03_datasets.md \u00a73.5.",
   "version": "2026-09-29",
-  "FT":   ["AD36", "AD09", "AD63", "AD47", "AD35", "AD43", "AD21", "AD30", "AD26", "AD42", "AD27", "AD23"],
-  "REF":  ["AD40", "AD31", "AD16", "AD13", "AD41", "AD22"],
-  "TEST": ["AD59", "AD15", "AD60", "AD34", "AD28", "AD25"]
+  "FT": [
+    "AD36",
+    "AD09",
+    "AD63",
+    "AD47",
+    "AD35",
+    "AD43",
+    "AD21",
+    "AD30",
+    "AD26",
+    "AD42",
+    "AD27",
+    "AD23"
+  ],
+  "REF": [
+    "AD40",
+    "AD31",
+    "AD16",
+    "AD13",
+    "AD41",
+    "AD22"
+  ],
+  "TEST": [
+    "AD59",
+    "AD15",
+    "AD60",
+    "AD34",
+    "AD28",
+    "AD25"
+  ]
 }
