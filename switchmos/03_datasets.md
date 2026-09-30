@@ -91,6 +91,38 @@ Code-mixed count is a lower bound (English in Devanagari counts as Hindi). Other
   2. Build our own Hindi/code-mixed preference data from **open TTS systems** (IndicF5, Indic Parler, open multilingual models), rated by our raters.
   3. Lean on SpeechJudge-Data (outputs of open models) and MANGO (open models) for training.
 
+## 3.6b Data strategy: vendor tiers + evaluation-only + open training data (2026-09-30)
+
+**Vendor tiers** (our reading of each clause; to be confirmed by a legal read):
+
+| Tier | Systems in SpeechArenaBench | Clause | Use |
+|---|---|---|---|
+| **A: open** | IndicF5 (MIT) | None | Train and test |
+| **B: "no competing models" only** | Gemini 2.5 Pro TTS (Google), GPT-4o-mini TTS (OpenAI), Sonic 3 (Cartesia) | Forbid developing models that compete with the service; a naturalness judge is arguably not competing | **Test only** (conservative); training only if the legal read clears it |
+| **C: explicit ML ban or unknown** | Bulbul v3 (Sarvam §10.5: no train/test), ElevenLabs v3 (no ML training/testing datasets), Speech 2.8 HD (MiniMax, unverified) | Forbid ML train/test, or unknown | **Excluded** unless written permission (emails in `outreach/`) |
+
+**What survives, Hindi** (`results/speecharena_hi_pairs_by_system.json`):
+
+| Pair tiers | All Hindi pairs | Code-mixed pairs |
+|---|---|---|
+| A–B | 1,540 | 409 |
+| B–B | 2,904 | 750 |
+| **Usable (no tier C)** | **4,444 (27%)** | **1,159 (29%)** |
+| Any tier C (excluded) | 12,250 | 2,876 |
+| If Sarvam grants permission (+ Bulbul vs A/B) | +1,5xx ⚠ | +866 → **2,025** |
+
+**Combined strategy:**
+1. **Train only on open data** (no commercial-vendor audio): SOMOS, BVCC (+ sarulab), SpeechJudge-Data (outputs of open models, incl. zh–en mixed), MANGO (Hindi/Tamil, open systems), Blizzard 2014/2015 Indic MOS (six Indic languages; old systems; non-commercial research), plus minimal pairs and controls from HiACC and MUCS.
+2. **Test on SpeechArenaBench tier A + B pairs only**, never trained on. Tier C is not used at all unless permission arrives.
+3. **Optional ablation:** if the legal read allows, add tier B pairs to training and report the difference.
+
+**Why this is a stronger design, not just a safer one:** every SpeechArenaBench system becomes *unseen* in training, so the headline result becomes "trained without any commercial-vendor audio, generalizes to modern commercial Indic and code-switched TTS". It also removes the risk of the model learning system identity.
+
+**Costs and mitigations:**
+- Indic training signal is thinner (MANGO hi/ta, old Blizzard Indic, minimal pairs). Mitigation: multilingual encoder; if Indic accuracy falls short, add our own ratings of open voices (route 4) as a targeted top-up.
+- Test set is smaller: 1,159 Hindi code-mixed pairs still gives a 95% confidence interval of about ±2.9 points on pairwise accuracy; count the other 9 languages the same way (S9).
+- Tier B testing still needs confirmation that *evaluation* use is permitted (their clauses target competing models, not testing).
+
 ## 3.7 Language tagging
 
 - Devanagari = Hindi, Latin = English where scripts are consistent (HiACC, most SpeechArenaBench Hindi, MUCS per its paper).

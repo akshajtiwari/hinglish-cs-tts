@@ -7,7 +7,7 @@ Every test uses data not seen in training. Pass bars are fixed before any result
 | Group | Sets | Metrics | Why |
 |---|---|---|---|
 | **Modern pairwise** (headline) | SpeechJudge-Eval (available, CC-BY-NC); MOS-RMBench (**not released**; rebuild pairs from BVCC/SOMOS or drop); TTS-HP (`datapointai/tts-human-preferences-large`, gated; vendor ToS caveat) | Pairwise accuracy, with human ceiling and longest-clip heuristic; small-difference pairs reported separately | Where UTMOS/UTMOSv2 are near chance |
-| **Indic** (headline) | SpeechArenaBench held-out systems and held-out languages (subject to the vendor-ToS decision, `03_datasets.md` §3.6); MANGO held-out systems | Pairwise accuracy; system-ranking Kendall τ; MUSHRA SRCC | Where off-the-shelf predictors fail |
+| **Indic** (headline) | SpeechArenaBench **tier A+B pairs only** (IndicF5, Gemini, GPT-4o-mini TTS, Sonic 3), all unseen in training (`03_datasets.md` §3.6b; Hindi: 4,444 pairs, 1,159 code-mixed); MANGO held-out systems | Pairwise accuracy; system-ranking Kendall τ; MUSHRA SRCC | Where off-the-shelf predictors fail |
 | **Code-switched** (headline) | SpeechArenaBench code-mixed vs monolingual subsets; SpeechJudge mixed slice | Pairwise accuracy per subset | The specific gap we target |
 | **Classic** (no-harm) | BVCC utt/sys; SOMOS; VMC'23 tracks; VMC'24 T1 zoomed; BC2019 Mandarin | SRCC, LCC, MSE | Must stay competitive with UTMOS/UTMOSv2 |
 | **Local events** | Held-out edited pairs with known locations; our human switch study (08) | Localization AUC; correlation with human switch ratings | Per-event scores mean something |

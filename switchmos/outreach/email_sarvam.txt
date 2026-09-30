@@ -1,0 +1,27 @@
+To: [Sarvam AI research / partnerships contact — check https://www.sarvam.ai/contact or legal@ / research@ addresses on their site]
+Subject: Request for written permission: research use of Bulbul outputs for TTS evaluation
+
+Dear Sarvam AI team,
+
+I am Akshaj Tiwari, a researcher working on automatic evaluation of synthetic speech for Indian languages [affiliation].
+
+I am building a non-commercial research model that predicts how natural synthetic speech sounds to listeners, with a focus on Indian languages and Hindi-English code-mixed speech. Bulbul is one of the strongest systems in this space, and it appears in AI4Bharat's public SpeechArenaBench dataset (Bulbul v3 Beta outputs with human preference ratings).
+
+Your Terms of Service (§10.5) require written permission before Bulbul output is used to develop, train, or test a machine-learning system. I am therefore writing to request that permission, limited as follows:
+
+- Scope: the Bulbul outputs already included in SpeechArenaBench, and optionally a small number of new outputs generated through your API for Hindi-English test sentences.
+- Purpose: training and evaluating a research model that scores speech naturalness. It is an evaluation tool, not a speech-synthesis model, and does not compete with Bulbul.
+- Use: non-commercial research and an academic publication (target: Interspeech 2027). We would not redistribute Bulbul audio beyond the original dataset.
+- Attribution: we would credit Sarvam AI and share our results with you before publication.
+
+A reliable automatic naturalness measure for Indian-language and code-mixed speech is something the community currently lacks, and we would be glad to share the tool and findings with your team.
+
+If permission is possible, a short written confirmation by email would be sufficient. If you would prefer different conditions, I am happy to discuss.
+
+Thank you for considering this request.
+
+Best regards,
+Akshaj Tiwari
+[Affiliation]
+[Email] · [Phone, optional]
+Project page: https://github.com/akshajtiwari/hinglish-cs-tts

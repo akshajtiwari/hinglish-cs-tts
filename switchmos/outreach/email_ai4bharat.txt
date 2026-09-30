@@ -1,0 +1,25 @@
+To: ai4bharat@cse.iitm.ac.in  [confirm address on https://ai4bharat.iitm.ac.in/ or the SpeechArenaBench dataset page]
+Cc: [authors of "Preferences of a Voice-First Nation" (arXiv 2604.21481), e.g. corresponding author]
+Subject: SpeechArenaBench: licence and permitted research use of the audio
+
+Dear AI4Bharat team,
+
+I am Akshaj Tiwari, a researcher working on automatic evaluation of synthetic speech [affiliation]. Thank you for releasing SpeechArenaBench and the "Preferences of a Voice-First Nation" study. It is the only large set of human preferences for Indian-language and code-mixed TTS, and it fills a gap in the field.
+
+I am building a naturalness predictor (in the spirit of UTMOS) aimed at modern, Indian-language, and code-switched speech, for non-commercial research. Before using SpeechArenaBench I would like to make sure our use is appropriate, and I would be grateful for your guidance on three points:
+
+1. Licence. The Hugging Face dataset card states the MIT licence, while the paper states CC BY 4.0. Which licence applies to the released audio and annotations?
+
+2. Use of the audio for model training and evaluation. The audio was generated with several commercial TTS services, some of whose terms restrict using outputs for machine-learning development or testing (for example, Sarvam's terms §10.5 and ElevenLabs' usage policy). Did you obtain permission from these providers covering downstream research use? If not, could you advise which systems' outputs you consider suitable for (a) training a research evaluation model and (b) evaluating one? We are happy to restrict our use to what you and the providers permit.
+
+3. Labels. In the Hindi split, some `preference_model` values list two systems (e.g. "Gemini 2.5 Pro TTS, Eleven Labs v3"). Do these correspond to the "Both Good" / "Both Bad" options described in the paper?
+
+We would of course cite your work, share our findings and code with you before publication, and would welcome any collaboration if it is of interest.
+
+Thank you for your time.
+
+Best regards,
+Akshaj Tiwari
+[Affiliation]
+[Email] · [Phone, optional]
+Project page: https://github.com/akshajtiwari/hinglish-cs-tts

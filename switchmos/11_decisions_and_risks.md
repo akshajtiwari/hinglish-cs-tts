@@ -17,7 +17,7 @@
 
 | # | Question | Recommendation | By |
 |---|---|---|---|
-| O1 | **Can SpeechArenaBench / TTS-HP audio be used for training, or only testing, given vendor ToS?** | Ask AI4Bharat; legal read; meanwhile plan with open-model data (SpeechJudge, MANGO) and treat SAB as eval-first | Week 0 |
+| O1 | **Vendor ToS on SpeechArenaBench / TTS-HP audio** | **Provisional decision (2026-09-30):** train only on open data; test on SAB tier A+B pairs; exclude tier C (Sarvam, ElevenLabs, MiniMax) unless permission (`03_datasets.md` §3.6b). Emails drafted (`outreach/`); legal read still needed for tier B testing | Week 0 |
 | O2 | SpeechArenaBench licence: MIT (card) vs CC BY 4.0 (paper) | Ask AI4Bharat | Week 0 |
 | O3 | Meaning of multi-system `preference_model` labels | Confirm against "Both Good / Both Bad" | Week 1 |
 | O4 | Multilingual encoder | Pilot w2v-BERT 2.0 / mHuBERT-147 / XLS-R on dev pairs, weighted by A16 memory | Week 5 |

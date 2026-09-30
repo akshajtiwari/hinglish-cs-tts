@@ -32,7 +32,8 @@ Automatic "how human does this voice sound?" predictors such as UTMOS became the
 | 14 | `14_study_plan.md` | What to learn, with verified video links |
 | 15 | `15_infrastructure.md` | GPU server, environment, IndicF5 toolkit and recipe |
 | 16 | `16_glossary.md` | Terms |
-| — | `results/speecharena_hi_stats.json` | Counted SpeechArenaBench Hindi statistics |
+| — | `results/speecharena_hi_stats.json`, `results/speecharena_hi_pairs_by_system.json` | Counted SpeechArenaBench Hindi statistics and pairs per system combination |
+| — | `outreach/email_ai4bharat.txt`, `outreach/email_sarvam.txt` | Draft emails on licence and permission |
 
 ## Decided
 
@@ -44,5 +45,6 @@ Automatic "how human does this voice sound?" predictors such as UTMOS became the
 ## Status (2026-09-30)
 
 - Docs consolidated; nothing trained yet.
-- **Blockers before week 1** (`12_pre_implementation_checklist.md`): vendor terms of service on SpeechArenaBench audio (L1), its licence conflict (L2), scoop monitoring (F4), server GPU schedule (C3), rotate the Hugging Face token (G1).
+- **Vendor-terms blocker handled by design:** train only on open data; SpeechArenaBench (tier A+B systems) is a held-out test set (`03_datasets.md` §3.6b). Emails to AI4Bharat and Sarvam drafted in `outreach/`.
+- **Before week 1:** send the emails and get a legal read on tier B testing (L1–L2), scoop monitoring (F4), server GPU schedule (C3), rotate the Hugging Face token (G1).
 - Then: download and harmonize datasets; reproduce UTMOS/UTMOSv2/SpeechJudge baselines.

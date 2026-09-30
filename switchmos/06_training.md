@@ -8,7 +8,8 @@
 | BVCC + sarulab zoomed | Absolute MOS | Classic benchmark domain; zoomed set covers high-quality systems |
 | **SpeechJudge-Data** | 99K modern pairs with strength; **zh–en mixed slice** | Modern zero-shot TTS; code-switched |
 | **MANGO** | Hindi / Tamil MUSHRA | Indic absolute scores (normalize per MUSHRA page) |
-| **SpeechArenaBench** (train split) | Indic pairwise + 6 axes; 78% code-mixed | Indic and code-switched, modern commercial systems. **Training use pending vendor-ToS decision** (`03_datasets.md` §3.6); fallback: evaluation only |
+| ~~SpeechArenaBench~~ | — | **Not used for training** (vendor terms; `03_datasets.md` §3.6b). Tier A+B pairs are the held-out test set. Tier B training only as an optional, legally cleared ablation |
+| **Blizzard 2014/2015 Indic** | Absolute MOS, six Indic languages | Indic absolute ratings from open research systems (old; non-commercial research, request via CSTR) |
 | CodecMOS-Accent (if released) | Naturalness, modern zero-shot, accents | Modern English variety |
 | VMC'26 emotional (optional) | QMOS | Expressive range |
 | Blizzard (optional) | MOS incl. Indic 2014/15 | Extra languages; older systems |
