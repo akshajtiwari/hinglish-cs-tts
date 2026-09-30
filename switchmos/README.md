@@ -12,6 +12,7 @@ People in India mix Hindi and English inside one sentence ("मुझे office 
 
 | # | File | Question it answers |
 |---|---|---|
+| 00 | `00_committee_proposal.md` | **The whole idea for a non-specialist committee:** background, problem, research questions, novelty, societal value, every build step and decision, evaluation, risks, out-of-scope, glossary |
 | 01 | `01_problem_and_idea.md` | What problem, why it matters, what we build |
 | 02 | `02_what_exists.md` | Current quality scores, closest prior work, what is new |
 | 03 | `03_data.md` | Every dataset, its role, and the numbers |
