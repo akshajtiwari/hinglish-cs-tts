@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "switchmos"
+version = "0.0.1"
+description = "Naturalness prediction for synthetic speech, with a focus on Indian-language and code-switched speech"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+data = ["numpy>=2.0", "pandas>=2.2", "pyarrow>=17", "soundfile>=0.12", "librosa>=0.10", "datasets>=3.0"]
+train = ["torch==2.8.0", "torchaudio==2.8.0", "transformers>=4.50", "accelerate>=1.0", "tensorboard"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

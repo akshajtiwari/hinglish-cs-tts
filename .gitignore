@@ -1,0 +1,30 @@
+# data and model artifacts stay local (anchored to repo root so src/switchmos/data/ is tracked)
+/data/
+/datasets/
+/cache/
+/runs/
+*.wav
+*.zip
+*.safetensors
+*.pt
+*.ckpt
+checkpoints/
+outputs/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# editors / os
+.DS_Store
+.idea/
+.vscode/
+
+# server-side artifacts
+hinglishtts/
+F5-TTS/
+logs/
+.python-version
