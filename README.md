@@ -79,6 +79,11 @@ PYTHONPATH=src python scripts/step2_baselines/prepare_exam_audio.py --root ~/pro
 bash scripts/step2_baselines/run_all_scorers.sh
 ```
 
+UTMOSv2 is slow (its spectrograms are made on the CPU). To spread it over several GPUs, `split_remaining.py` splits the
+files it has not scored yet into one list per GPU, each list is scored by its own `score_baselines.py` job, and
+`finalize_utmosv2_parts.sh` merges the parts back (`merge_parts.py`) and runs the evaluation.
+`audio_durations.py` reports the shortest and longest exam clips per dataset.
+
 The shell scripts use the server paths `~/projects/hinglish-cs-tts`, `~/projects/switchmos_code` and
 `~/projects/baselines-venv`; change them at the top of each script for another machine.
 Long jobs can be stopped and started again: finished work is skipped.
