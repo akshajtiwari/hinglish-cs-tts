@@ -25,7 +25,7 @@ scripts/
   step2_baselines/      score the test clips with UTMOS, UTMOSv2, DistillMOS and SCOREQ and evaluate them
 notebooks/              data exploration notebooks (outputs cleared)
 model/                  IndicF5 fine-tuning on HiACC (see model/README.md)
-tests/                  unit tests (standard library only)
+tests/                  unittest checks (bootstrap checks additionally use numpy)
 ```
 
 ## Setup
@@ -83,6 +83,13 @@ UTMOSv2 is slow (its spectrograms are made on the CPU). To spread it over severa
 files it has not scored yet into one list per GPU, each list is scored by its own `score_baselines.py` job, and
 `finalize_utmosv2_parts.sh` merges the parts back (`merge_parts.py`) and runs the evaluation.
 `audio_durations.py` reports the shortest and longest exam clips per dataset.
+
+For failure analysis, `collect_failure_evidence.py` checks SAB votes against source metadata,
+checks selected audio copies, and measures basic audio properties without changing recordings.
+`analyze_judge_failures.py` checks saved preference results, compares judges on the same examples
+with sentence-level bootstrap intervals, reports consistently weighted shortcuts, and selects
+successful listening comparisons. Both scripts expose their input/output paths through `--help`.
+These are exploratory checks of existing predictions; they do not train or select a replacement judge.
 
 The shell scripts use the server paths `~/projects/hinglish-cs-tts`, `~/projects/switchmos_code` and
 `~/projects/baselines-venv`; change them at the top of each script for another machine.
