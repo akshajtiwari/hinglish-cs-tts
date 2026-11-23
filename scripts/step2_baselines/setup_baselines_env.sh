@@ -2,6 +2,7 @@
 # Step 2: a separate pyenv venv for the baseline scorers (keeps the IndicF5 venv hinglishtts untouched).
 # Each package group is installed on its own, so one failure does not stop the others.
 # Everything is logged, and the final package list is saved with pip freeze.
+# To rebuild the exact environment of the paper instead, install requirements-baselines.txt (pinned, with model hashes).
 set -eu
 BASE="$HOME/projects/hinglish-cs-tts"
 LOG="$BASE/logs/step2_env.log"
