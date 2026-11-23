@@ -2,9 +2,12 @@
 """Count code-mixed pairs in SpeechArenaBench (one language, Hindi by default) without downloading audio.
 
 Reads only the text and metadata columns of each parquet shard over HTTP.
-Code-mixed = the sentence has at least one Latin-script word AND at least one Devanagari word.
+Code-mixed = the sentence has at least one Latin letter AND at least one letter of the language's own script
+(Devanagari for hi and mr, Kannada script for kn; see switchmos.data.load_speecharena.SCRIPTS).
+Also counts the votes between two allowed (tier A+B) systems per pairing, with the decided (A or B) votes, which is
+what Paper A uses.
 Needs pyarrow, huggingface_hub and fsspec (pip install), and a Hugging Face token with the dataset gate accepted:
-    python model/scripts/count_speecharena_codemix.py [--lang hi] [--out stats.json]
+    PYTHONPATH=src python model/scripts/count_speecharena_codemix.py [--lang hi] [--out stats.json]
 """
 import argparse
 import json
@@ -12,14 +15,17 @@ import json
 import pyarrow.parquet
 from huggingface_hub import HfFileSystem
 
+from switchmos.data.load_speecharena import ALLOWED_SYSTEMS, SCRIPTS, classify
+
 ROOT = "datasets/ai4bharat/SpeechArenaBench"
 COLUMNS = ["academic_prompt_id", "sentence", "model_a", "model_b", "preference_model", "fine_grained_eval", "user_id"]
 
 
-def has_devanagari(text):
-    """True if the text has a Devanagari character (U+0900 to U+097F)."""
+def has_native(text, lang):
+    """True if the text has a letter of the language's own script."""
+    first, last = SCRIPTS[lang]
     for ch in text:
-        if "ऀ" <= ch <= "ॿ":
+        if first <= ch <= last:
             return True
     return False
 
@@ -32,17 +38,42 @@ def has_latin(text):
     return False
 
 
-def kind(sentence):
-    """'mixed', 'latin_only', 'dev_only' or 'other', from the scripts used in the sentence."""
-    dev = has_devanagari(sentence)
+def kind(sentence, lang):
+    """'mixed', 'latin_only', 'native_only' or 'other', from the scripts used in the sentence."""
+    native = has_native(sentence, lang)
     latin = has_latin(sentence)
-    if dev and latin:
+    if native and latin:
         return "mixed"
     if latin:
         return "latin_only"
-    if dev:
-        return "dev_only"
+    if native:
+        return "native_only"
     return "other"
+
+
+def allowed_counts(rows, lang):
+    """Votes between two allowed systems, per pairing: all, decided (A or B), decided mixed, and unknown values."""
+    pairings = {}
+    for row in rows:
+        if row["model_a"] not in ALLOWED_SYSTEMS or row["model_b"] not in ALLOWED_SYSTEMS:
+            continue
+        pairing = " vs ".join(sorted([row["model_a"], row["model_b"]]))
+        block = pairings.setdefault(pairing, {"votes": 0, "decided": 0, "decided_mixed": 0, "unrecognised": 0})
+        block["votes"] += 1
+        try:
+            vote, tie_kind = classify(row["preference_model"], row["model_a"], row["model_b"])
+        except ValueError:
+            block["unrecognised"] += 1
+            continue
+        if vote in ["A", "B"]:
+            block["decided"] += 1
+            if kind(row["sentence"] or "", lang) == "mixed":
+                block["decided_mixed"] += 1
+    totals = {"votes": 0, "decided": 0, "decided_mixed": 0, "unrecognised": 0}
+    for block in pairings.values():
+        for key in totals:
+            totals[key] += block[key]
+    return {"totals": totals, "pairings": pairings}
 
 
 def add_count(counts, key):
@@ -82,13 +113,13 @@ def main():
     pairs_by_kind = {}
     sentences = {}    # prompt id -> sentence (first one seen)
     for row in rows:
-        add_count(pairs_by_kind, kind(row["sentence"] or ""))
+        add_count(pairs_by_kind, kind(row["sentence"] or "", args.lang))
         if row["academic_prompt_id"] not in sentences:
             sentences[row["academic_prompt_id"]] = row["sentence"] or ""
 
     sentences_by_kind = {}
     for sentence in sentences.values():
-        add_count(sentences_by_kind, kind(sentence))
+        add_count(sentences_by_kind, kind(sentence, args.lang))
 
     systems = {}
     mixed_systems = {}
@@ -96,7 +127,7 @@ def main():
     raters = set()
     mixed_raters = set()
     for row in rows:
-        is_mixed = kind(row["sentence"] or "") == "mixed"
+        is_mixed = kind(row["sentence"] or "", args.lang) == "mixed"
         for model in (row["model_a"], row["model_b"]):
             add_count(systems, model)
             if is_mixed:
@@ -106,7 +137,7 @@ def main():
         if is_mixed:
             mixed_raters.add(row["user_id"])
 
-    mixed_sentences = [s for s in sentences.values() if kind(s) == "mixed"]
+    mixed_sentences = [s for s in sentences.values() if kind(s, args.lang) == "mixed"]
     latin_words = []
     for sentence in mixed_sentences:
         latin_words.append(len([w for w in sentence.split() if has_latin(w)]))
@@ -131,6 +162,7 @@ def main():
         "raters_on_mixed": len(mixed_raters),
         "system_appearances": systems,
         "system_appearances_mixed": mixed_systems,
+        "allowed_systems": allowed_counts(rows, args.lang),
         "preference_values_top": top_counts(preferences, 10),
         "fine_grained_eval_examples": fine_grained_examples,
         "mixed_sentence_samples": mixed_sentences[:args.samples],

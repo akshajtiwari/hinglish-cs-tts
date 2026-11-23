@@ -1,4 +1,4 @@
-"""SpeechArenaBench loader (Hindi, allowed systems only): one source row is one rater's vote on a pair.
+"""SpeechArenaBench loader (one language, allowed systems only): one source row is one rater's vote on a pair.
 
 A vote (preference_model) is one of:
     one system name               -> that system wins (A or B)
@@ -6,8 +6,8 @@ A vote (preference_model) is one of:
     "Tie / No Preference"           -> TIE, tie_kind no_preference
 The pair label is the majority of the A and B votes; equal counts give TIE.
 Free-text comments are dropped on purpose; only the six 1-5 axis ratings are kept, as JSON.
-The "language" field is "hi" everywhere, so a sentence counts as mixed when it has
-both Devanagari and Latin letters.
+Each language folder holds one language, so a sentence counts as mixed when it has both a letter of that
+language's own script and a Latin letter.
 """
 import hashlib
 import json
@@ -16,17 +16,36 @@ from pathlib import Path
 COLUMNS = ["academic_prompt_id", "sentence", "model_a", "model_b", "user_id", "gender", "preference_model",
            "fine_grained_eval", "src_shard", "src_row"]
 
+# tiers A and B (docs/plan/03_datasets.md); tier C systems are never kept because of their terms of use
+ALLOWED_SYSTEMS = ["Indic F5", "Gemini 2.5 Pro TTS", "GPT 4o Mini TTS", "Sonic 3"]
 
-def is_mixed(sentence):
-    """True when the sentence has both a Devanagari letter and a Latin (a-z, A-Z) letter."""
-    has_devanagari = False
+# first and last Unicode letter of each language's own script (Marathi is written in Devanagari, like Hindi)
+SCRIPTS = {"hi": ("ऀ", "ॿ"), "mr": ("ऀ", "ॿ"), "kn": ("ಀ", "೿")}
+
+
+def script_class(sentence, lang="hi"):
+    """"mixed" (letters of the language's own script and Latin a-z/A-Z letters), "native" (own script only),
+    "latin" (Latin only, e.g. Romanized Hindi or English) or "none"."""
+    first, last = SCRIPTS[lang]
+    has_native = False
     has_latin = False
     for ch in sentence or "":
-        if "ऀ" <= ch <= "ॿ":
-            has_devanagari = True
+        if first <= ch <= last:
+            has_native = True
         if ch.isascii() and ch.isalpha():
             has_latin = True
-    return has_devanagari and has_latin
+    if has_native and has_latin:
+        return "mixed"
+    if has_native:
+        return "native"
+    if has_latin:
+        return "latin"
+    return "none"
+
+
+def is_mixed(sentence, lang="hi"):
+    """True when the sentence has both a letter of the language's own script and a Latin (a-z, A-Z) letter."""
+    return script_class(sentence, lang) == "mixed"
 
 
 def classify(preference, model_a, model_b):
@@ -61,8 +80,8 @@ def make_pair_id(row):
     return "speecharena:" + hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
 
 
-def convert(rows):
-    """Turn vote rows (dicts with COLUMNS) into (pairs, votes), two lists of dicts."""
+def convert(rows, lang="hi"):
+    """Turn vote rows (dicts with COLUMNS) of one language into (pairs, votes), two lists of dicts."""
     # pair_id -> first source row, its source_row text, and the list of votes (in order of first appearance)
     items = {}
     votes = []
@@ -104,21 +123,21 @@ def convert(rows):
         agreement = None
         if label != "TIE" and decided > 0:
             agreement = max(count_a, count_b) / decided
-        mixed = is_mixed(first["sentence"])
+        mixed = is_mixed(first["sentence"], lang)
         if mixed:
-            lang = "hi-en"
+            pair_lang = f"{lang}-en"
         else:
-            lang = "hi"
+            pair_lang = lang
         pairs.append({
             "pair_id": pair_id,
             "dataset": "speecharena",
             "split": "unassigned",
             "source_split": None,
-            "audio_a": f"speecharena_hi_AB:{item['source_row']}:A",
-            "audio_b": f"speecharena_hi_AB:{item['source_row']}:B",
+            "audio_a": f"speecharena_{lang}_AB:{item['source_row']}:A",
+            "audio_b": f"speecharena_{lang}_AB:{item['source_row']}:B",
             "transcript": first["sentence"],
             "sentence_id": str(first["academic_prompt_id"]),
-            "lang": lang,
+            "lang": pair_lang,
             "mixed": mixed,
             "system_a": first["model_a"],
             "system_b": first["model_b"],
@@ -144,6 +163,6 @@ def read_rows(root):
     return rows
 
 
-def load(root):
-    """Return (pairs, votes) for our filtered copy of SpeechArenaBench."""
-    return convert(read_rows(root))
+def load(root, lang="hi"):
+    """Return (pairs, votes) for our filtered copy of one SpeechArenaBench language."""
+    return convert(read_rows(root), lang)

@@ -101,6 +101,29 @@ class TestSpeechArena(unittest.TestCase):
         self.assertFalse(load_speecharena.is_mixed("यह है"))
         self.assertFalse(load_speecharena.is_mixed("only latin"))
 
+    def test_script_class(self):
+        self.assertEqual(load_speecharena.script_class("यह एक test है"), "mixed")
+        self.assertEqual(load_speecharena.script_class("यह है"), "native")
+        self.assertEqual(load_speecharena.script_class("Clock mein 4:00 PM baje"), "latin")
+        self.assertEqual(load_speecharena.script_class("123 !"), "none")
+
+    def test_is_mixed_kannada_and_marathi(self):
+        self.assertTrue(load_speecharena.is_mixed("ಇದು ಒಂದು test", "kn"))
+        self.assertFalse(load_speecharena.is_mixed("ಇದು ಒಂದು ವಾಕ್ಯ", "kn"))
+        # Devanagari is not Kannada script, so a Hindi-English sentence is not mixed for Kannada
+        self.assertFalse(load_speecharena.is_mixed("यह एक test है", "kn"))
+        self.assertTrue(load_speecharena.is_mixed("हे एक test आहे", "mr"))
+
+    def test_convert_tags_the_language(self):
+        row = arena_row("Sonic 3")
+        row["sentence"] = "ಇದು ಒಂದು test"
+        pairs, votes = load_speecharena.convert([row], "kn")
+        self.assertEqual(pairs[0]["lang"], "kn-en")
+        self.assertTrue(pairs[0]["audio_a"].startswith("speecharena_kn_AB:"))
+        row["sentence"] = "ಇದು ಒಂದು ವಾಕ್ಯ"
+        pairs, votes = load_speecharena.convert([row], "kn")
+        self.assertEqual(pairs[0]["lang"], "kn")
+
     def test_convert_votes_into_pair(self):
         rows = [
             arena_row("Gemini 2.5 Pro TTS", user="u1", n=0),

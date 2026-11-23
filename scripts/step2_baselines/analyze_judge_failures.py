@@ -52,7 +52,7 @@ def credit(score_a, score_b, label):
     return float((score_a > score_b) == (label == "A"))
 
 
-def join_scores(rows, scores, sab):
+def join_scores(rows, scores, sab, judges=JUDGES):
     records = []
     for source in rows:
         if source["label"] not in ["A", "B"] or source.get("audio_status", "ok") != "ok":
@@ -64,14 +64,14 @@ def join_scores(rows, scores, sab):
         row["winner"] = row["system_a"] if row["label"] == "A" else row["system_b"]
         if not sab:
             row["winner"] = row["label"]
-        for judge in JUDGES:
+        for judge in judges:
             a = scores[judge][row["path_a"]]
             b = scores[judge][row["path_b"]]
             row[judge + "_a"] = a
             row[judge + "_b"] = b
             row[judge + "_credit"] = credit(a, b, row["label"])
-        row["all_wrong"] = all([row[judge + "_credit"] == 0 for judge in JUDGES])
-        row["all_right"] = all([row[judge + "_credit"] == 1 for judge in JUDGES])
+        row["all_wrong"] = all([row[judge + "_credit"] == 0 for judge in judges])
+        row["all_right"] = all([row[judge + "_credit"] == 1 for judge in judges])
         records.append(row)
     return records
 
