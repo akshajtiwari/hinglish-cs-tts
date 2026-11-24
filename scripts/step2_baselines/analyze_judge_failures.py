@@ -235,8 +235,9 @@ def main():
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--final-results", type=Path, required=True)
-    parser.add_argument("--listening-sheet", type=Path, required=True)
-    parser.add_argument("--listening-audio", type=Path, required=True)
+    # the listening pack belongs to the 15 Oct run; leave both out to rerun the numbers on other scores
+    parser.add_argument("--listening-sheet", type=Path, default=None)
+    parser.add_argument("--listening-audio", type=Path, default=None)
     parser.add_argument("--rounds", type=int, default=2000)
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
@@ -273,7 +274,7 @@ def main():
         for field in ["seconds", "rms", "quiet_relative_fraction", "quiet_absolute_fraction", "near_full_scale_fraction"]:
             for side in ["a", "b"]:
                 row[field + "_" + side] = float(features[row["path_" + side]][field])
-    listening = read_csv(args.listening_sheet)
+    listening = read_csv(args.listening_sheet) if args.listening_sheet else []
     by_id = {row["id"]:row for row in sab}
     failures = []
     listening_checks = []
@@ -298,8 +299,9 @@ def main():
         report["subsets"][name] = {"summary":summary(rows), "comparisons":paired_comparisons(rows,args.rounds,15)}
     for name, rows in group_by(sab, "switch_bin").items():
         report["switch_bins"][name] = summary(rows)
-    groups = {"all_wrong":[r for r in sab if r["all_wrong"]],
-              "all_right":[r for r in sab if r["all_right"]], "selected_40":failures}
+    groups = {"all_wrong":[r for r in sab if r["all_wrong"]], "all_right":[r for r in sab if r["all_right"]]}
+    if failures:
+        groups["selected_40"] = failures
     report["audio_descriptions"] = {}
     for name, rows in groups.items():
         block = {"n":len(rows), "sentences":len(group_by(rows,"sentence_id")),
@@ -329,6 +331,8 @@ def main():
             if path.is_file():
                 inputs.append({"path":str(path), "sha256":files.file_hash(path)})
     for path in [args.final_results, args.listening_sheet]:
+        if path is None:
+            continue
         inputs.append({"path":str(path), "sha256":files.file_hash(path)})
     files.save_json(args.out / "run_manifest.json", {
         "inputs":inputs, "script_sha256":files.file_hash(__file__), "numpy":np.__version__,
