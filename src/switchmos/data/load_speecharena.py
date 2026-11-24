@@ -99,6 +99,8 @@ def convert(rows, lang="hi"):
             "pair_id": pair_id,
             "dataset": "speecharena",
             "rater_id": str(row["user_id"]),
+            # SAB's "gender" is the voice gender of the pair (SAB pairs same-gender voices; most raters have both
+            # values), not the rater's; the column name is kept because the harmonised tables are frozen (L-0164)
             "rater_gender": row.get("gender"),
             "vote": vote,
             "strength": 0,
