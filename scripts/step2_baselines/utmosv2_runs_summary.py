@@ -6,8 +6,9 @@ For every run, and for the mean score over all runs:
   SAB decided votes: plain accuracy, winner-balanced accuracy and within-pairing AUC (point estimates, as in
   paper_a_extra_analyses.py); SpeechJudge test: accuracy. Equal scores count half.
 Then mean ± SD of each measure over the runs, and the per-clip SD of the score (median, 95th percentile, max).
-Writes <out>/utmosv2_runs.json and a scores folder <out>/scores_mean/ in which utmosv2.csv is the per-clip mean and
-the other judges' files are copied unchanged, so every analysis can be rerun on the mean with --scores.
+Writes <out>/utmosv2_runs.json and a scores folder <out>/scores_mean/ in which utmosv2.csv is the per-clip mean over
+the runs for clips scored in every run, and run 1 for the rest (the rating corpora, scored once), while the other
+judges' files are copied unchanged; so every analysis, including evaluate_baselines.py, can be rerun with --scores.
 
 Run from the project folder:
   PYTHONPATH=src:scripts/step2_baselines ~/.venvs/switchmos-analysis/bin/python scripts/step2_baselines/utmosv2_runs_summary.py \\
@@ -74,7 +75,8 @@ def main():
     for scores in runs.values():
         common &= set(scores)
     matrix = numpy.array([[runs[name][path] for path in sorted(common)] for name in runs])
-    mean_scores = dict(zip(sorted(common), matrix.mean(axis=0)))
+    # rounded as in the saved file, so equal means (scores sit on a 1/512 grid) tie here too and count half
+    mean_scores = {path: round(float(value), 6) for path, value in zip(sorted(common), matrix.mean(axis=0))}
     clip_sd = matrix.std(axis=0, ddof=1)
 
     report = {"runs": list(runs), "clips_in_every_run": len(common), "per_run": {}, "over_runs": {}, "mean_score": {},
@@ -95,8 +97,9 @@ def main():
     folder = args.out / "scores_mean"
     folder.mkdir(parents=True, exist_ok=True)
     lines = ["path,score"]
-    for path in sorted(mean_scores):
-        lines.append(f"{path},{mean_scores[path]:.6f}")
+    for path in sorted(runs["run1"]):
+        lines.append(f"{path},{mean_scores.get(path, runs['run1'][path]):.6f}")
+    report["scores_mean_file"] = {"mean_of_runs": len(mean_scores), "run1_only": len(runs["run1"]) - len(mean_scores)}
     files.save_text(folder / "utmosv2.csv", "\n".join(lines) + "\n")
     for judge in JUDGES:
         if judge != "utmosv2":
