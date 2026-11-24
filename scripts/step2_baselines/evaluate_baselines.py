@@ -58,10 +58,9 @@ def rating_block(clips, scores, with_system=True):
         report = metrics.regression_report(list(d["pred"]), list(d["mos"]), systems)
         report["n_audio_missing"] = n_audio_missing
         report["n_score_failed"] = int(len(clips) - len(d))
+        # full precision: the paper rounds once, when it prints (4-decimal values printed 63.35 as 63.3)
         rounded = {}
         for key, value in report.items():
-            if isinstance(value, float):
-                value = round(value, 4)
             rounded[key] = value
         results[scorer] = rounded
     return results
@@ -74,7 +73,7 @@ def accuracies(d, scores):
     for scorer in scores:
         x = d.dropna(subset=[f"{scorer}_a", f"{scorer}_b"])
         accuracy = metrics.pairwise_accuracy(list(x[f"{scorer}_a"]), list(x[f"{scorer}_b"]), list(x["label"]))
-        results[scorer] = round(accuracy, 4)
+        results[scorer] = accuracy
         results[f"n_{scorer}"] = len(x)
     return results
 
@@ -111,7 +110,7 @@ def stronger_system_oracle(d):
 def mean_abs_gap(d, scorer):
     """Mean absolute difference between the two scores of each pair."""
     gap = (d[f"{scorer}_a"] - d[f"{scorer}_b"]).abs().mean()
-    return round(float(gap), 4)
+    return float(gap)
 
 
 def add_score_columns(df, scores):
@@ -146,7 +145,7 @@ def evaluate(exam, scores):
     }
     for name, d in subsets.items():
         d = d[d["label"].isin(["A", "B"])]
-        result = {"n": len(d), "always_B": round(float((d["label"] == "B").mean()), 4)}
+        result = {"n": len(d), "always_B": float((d["label"] == "B").mean())}
         result.update(accuracies(d, scores))
         results["speechjudge"][name] = result
 
@@ -171,8 +170,8 @@ def evaluate(exam, scores):
     for name, d in vote_subsets.items():
         result = {
             "n": len(d),
-            "always_first": round(float((d["label"] == "A").mean()), 4),
-            "stronger_system_oracle": round(stronger_system_oracle(d), 4),
+            "always_first": float((d["label"] == "A").mean()),
+            "stronger_system_oracle": stronger_system_oracle(d),
         }
         result.update(accuracies(d, scores))
         block[name] = result
@@ -189,7 +188,7 @@ def evaluate(exam, scores):
     for scorer in scores:
         values = [result[scorer] for result in per_pairing.values()]
         # sum() on purpose, so floats add up exactly as before (Python 3.12+ sums floats more precisely than +=)
-        macro[scorer] = round(sum(values) / len(per_pairing), 4)
+        macro[scorer] = sum(values) / len(per_pairing)
     block["macro_over_pairings"] = macro
 
     tie_check = {}
