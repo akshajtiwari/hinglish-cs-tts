@@ -158,6 +158,29 @@ class TestScriptSubsets(unittest.TestCase):
         self.assertEqual(classes["native"][0]["mixed_script"], "False")
 
 
+@unittest.skipUnless(HAS_NUMPY, "needs numpy")
+class TestLengthControl(unittest.TestCase):
+    def test_system_preference_is_not_a_length_effect(self):
+        import length_control
+        # the judge always prefers X; X's clip is longer in some votes and shorter in others: length effect 0
+        rows = []
+        for i in range(6):
+            longer = i < 3
+            rows.append({"label": "A", "system_a": "X", "system_b": "Y", "sentence_id": f"s{i}", "pairing": "X vs Y",
+                         "judge_a": 2.0, "judge_b": 1.0, "seconds_a": 5.0 if longer else 2.0, "seconds_b": 3.0})
+        self.assertAlmostEqual(length_control.length_effect(rows, "judge"), 0.0)
+        # a judge that always picks the longer clip has an effect of 1 (100 points)
+        for row in rows:
+            row["judge_a"], row["judge_b"] = (2.0, 1.0) if row["seconds_a"] > row["seconds_b"] else (1.0, 2.0)
+        self.assertAlmostEqual(length_control.length_effect(rows, "judge"), 1.0)
+
+    def test_wilson(self):
+        import length_control
+        low, high = length_control.wilson(24, 24)
+        self.assertAlmostEqual(high, 1.0)
+        self.assertLess(low, 0.9)
+
+
 class TestMangoPages(unittest.TestCase):
     def test_page_pairs(self):
         clips = []
